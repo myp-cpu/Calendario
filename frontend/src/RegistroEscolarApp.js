@@ -9,7 +9,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 const schoolYearStart = new Date('2026-02-23'); // Week 0 Monday
 const schoolYearEnd = new Date('2027-01-05');
 
-const RegistroEscolarApp = ({ onBackToSelector }) => {
+const RegistroEscolarApp = () => {
   const { user, loading: authLoading, logout, isEditor, isAuthenticated } = useAuth();
   
   // State management
