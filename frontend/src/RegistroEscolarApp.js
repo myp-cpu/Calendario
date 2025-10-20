@@ -479,17 +479,7 @@ const RegistroEscolarApp = () => {
       <div className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <button 
-              onClick={onBackToSelector}
-              className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Volver a Sistemas
-            </button>
-            <div className="h-6 w-px bg-gray-300"></div>
-            <h1 className="text-lg font-semibold text-gray-800">Registro Escolar Interactivo</h1>
+            <h1 className="text-lg font-semibold text-gray-800">Registro Escolar Interactivo 2026</h1>
           </div>
           
           <div className="flex items-center space-x-4">
