@@ -1,10 +1,37 @@
 import React, { useState } from 'react';
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
+
 const PrintReportPanel = ({ onClose, activities, evaluations }) => {
   const [reportType, setReportType] = useState('actividades');
   const [section, setSection] = useState('todas');
+  const [nivel, setNivel] = useState('todos');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [emailTo, setEmailTo] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
+
+  // Get available niveles based on selected section
+  const getNivelesOptions = () => {
+    if (section === 'Middle') {
+      return [
+        { value: 'todos', label: 'Todos los Niveles' },
+        { value: '5', label: '5° Básico' },
+        { value: '6', label: '6° Básico' },
+        { value: '7', label: '7° Básico' },
+        { value: '8', label: '8° Básico' }
+      ];
+    } else if (section === 'Senior') {
+      return [
+        { value: 'todos', label: 'Todos los Niveles' },
+        { value: 'I', label: 'I Medio' },
+        { value: 'II', label: 'II Medio' },
+        { value: 'III', label: 'III Medio' },
+        { value: 'IV', label: 'IV Medio' }
+      ];
+    }
+    return [{ value: 'todos', label: 'Todos los Niveles' }];
+  };
 
   const filterDataByDateRange = (data, from, to) => {
     const fromDate = new Date(from);
