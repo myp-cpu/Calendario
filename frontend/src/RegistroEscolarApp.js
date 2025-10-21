@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
 import LoginPage from './LoginPage';
 import UserManagementPanel from './UserManagementPanel';
+import PrintReportPanel from './PrintReportPanel';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 
@@ -36,6 +37,7 @@ const RegistroEscolarApp = () => {
   const [editingActivity, setEditingActivity] = useState(null);
   const [editingEvaluation, setEditingEvaluation] = useState(null);
   const [showUserManagement, setShowUserManagement] = useState(false);
+  const [showPrintReport, setShowPrintReport] = useState(false);
 
   // Show login page if not authenticated
   if (authLoading) {
