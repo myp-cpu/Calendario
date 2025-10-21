@@ -1006,6 +1006,15 @@ const RegistroEscolarApp = () => {
       {showUserManagement && (
         <UserManagementPanel onClose={() => setShowUserManagement(false)} />
       )}
+
+      {/* Print Report Panel Modal */}
+      {showPrintReport && (
+        <PrintReportPanel 
+          onClose={() => setShowPrintReport(false)}
+          activities={activities}
+          evaluations={evaluations}
+        />
+      )}
     </div>
   );
 };
