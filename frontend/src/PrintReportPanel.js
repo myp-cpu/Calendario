@@ -488,6 +488,23 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
               </div>
             </div>
 
+            {/* Email Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Enviar por Email (Opcional)
+              </label>
+              <input
+                type="email"
+                value={emailTo}
+                onChange={(e) => setEmailTo(e.target.value)}
+                placeholder="destinatario@redland.cl"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Si ingresas un email, se enviará el reporte automáticamente
+              </p>
+            </div>
+
             {/* Info Box */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start">
