@@ -309,6 +309,72 @@ async def add_first_admin(email: str = Form(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 # ============================================
+# EMAIL REPORTING
+# ============================================
+
+class EmailReportRequest(BaseModel):
+    to: str
+    subject: str
+    html: str
+    reportType: str
+    section: str
+    nivel: str
+    dateFrom: str
+    dateTo: str
+
+@app.post("/api/send-report-email")
+async def send_report_email(request: EmailReportRequest):
+    """
+    Send report email (no authentication required for simplicity)
+    In production, you should add authentication or use a more secure method
+    """
+    try:
+        # For simplicity, we'll use a basic SMTP setup
+        # You should configure your SMTP settings in .env
+        SMTP_SERVER = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
+        SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+        SMTP_USER = os.environ.get("SMTP_USER", "")
+        SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+        SMTP_FROM = os.environ.get("SMTP_FROM", SMTP_USER)
+
+        if not SMTP_USER or not SMTP_PASSWORD:
+            # For demo purposes, just return success without sending
+            # In production, you'd configure real SMTP credentials
+            return {
+                "success": True,
+                "message": "Email functionality not configured. Please add SMTP credentials to .env file.",
+                "demo_mode": True
+            }
+
+        # Create message
+        message = MIMEMultipart("alternative")
+        message["Subject"] = request.subject
+        message["From"] = SMTP_FROM
+        message["To"] = request.to
+
+        # Add HTML content
+        html_part = MIMEText(request.html, "html", "utf-8")
+        message.attach(html_part)
+
+        # Send email
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.send_message(message)
+
+        return {
+            "success": True,
+            "message": f"Email sent successfully to {request.to}"
+        }
+
+    except Exception as e:
+        print(f"Error sending email: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error sending email: {str(e)}"
+        )
+
+# ============================================
 # HEALTH CHECK
 # ============================================
 
