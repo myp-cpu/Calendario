@@ -497,14 +497,14 @@ const RegistroEscolarApp = () => {
         {isEditor && (
           <div className="opacity-0 group-hover:opacity-100 ml-2 flex space-x-1 flex-shrink-0">
             <button
-              onClick={() => handleEditEvaluation(evaluation, dateKey, section)}
+              onClick={() => handleEditEvaluation(evaluation, evaluation.fecha, section)}
               className="text-blue-500 hover:text-blue-700 text-xs"
               title="Editar evaluación"
             >
               ✏️
             </button>
             <button
-              onClick={() => handleDeleteEvaluation(evaluation.id, dateKey, section)}
+              onClick={() => handleDeleteEvaluation(evaluation.id, evaluation.fecha, section)}
               className="text-red-500 hover:text-red-700 text-xs"
               title="Eliminar evaluación"
             >
