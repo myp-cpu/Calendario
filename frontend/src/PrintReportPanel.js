@@ -423,7 +423,10 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
               </label>
               <select
                 value={section}
-                onChange={(e) => setSection(e.target.value)}
+                onChange={(e) => {
+                  setSection(e.target.value);
+                  setNivel('todos'); // Reset nivel when section changes
+                }}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="todas">Todas las Secciones</option>
@@ -432,6 +435,26 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
                 <option value="Senior">Senior School</option>
               </select>
             </div>
+
+            {/* Nivel - Only shown when Middle or Senior is selected */}
+            {(section === 'Middle' || section === 'Senior') && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nivel
+                </label>
+                <select
+                  value={nivel}
+                  onChange={(e) => setNivel(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  {getNivelesOptions().map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Date Range */}
             <div className="grid grid-cols-2 gap-4">
