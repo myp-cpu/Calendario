@@ -103,7 +103,16 @@ const RegistroEscolarApp = () => {
   const weeks = generateWeeks();
 
   const getDateKey = (date) => {
-    return date.toISOString().split('T')[0];
+    // If date is already a string in YYYY-MM-DD format, return it
+    if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return date;
+    }
+    
+    // Convert Date object to YYYY-MM-DD without timezone conversion
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const formatDate = (date) => {
