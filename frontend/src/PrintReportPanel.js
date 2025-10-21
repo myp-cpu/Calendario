@@ -144,6 +144,10 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
                         section === 'Junior' ? 'Junior School' :
                         section === 'Middle' ? 'Middle School' : 'Senior School';
     
+    const nivelName = nivel === 'todos' ? 'Todos los Niveles' : 
+                      (section === 'Middle' ? `${nivel}° Básico` : 
+                       section === 'Senior' ? `${nivel} Medio` : 'Todos los Niveles');
+    
     const reportTitle = reportType === 'actividades' ? 'Actividades' : 'Evaluaciones';
     
     let printContent = `
