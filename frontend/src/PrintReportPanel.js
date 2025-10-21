@@ -49,6 +49,23 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
     return filtered;
   };
 
+  const filterByNivel = (items, selectedNivel) => {
+    if (selectedNivel === 'todos') return items;
+    
+    return items.filter(item => {
+      if (reportType === 'evaluaciones' && item.curso) {
+        // For evaluations, check the curso field
+        if (section === 'Middle') {
+          return item.curso.includes(`${selectedNivel}°`);
+        } else if (section === 'Senior') {
+          return item.curso.includes(`${selectedNivel} EM`);
+        }
+      }
+      // For activities, we don't filter by nivel
+      return true;
+    });
+  };
+
   const sortEvaluationsByYearLevel = (evaluations) => {
     if (!evaluations || evaluations.length === 0) return [];
     
