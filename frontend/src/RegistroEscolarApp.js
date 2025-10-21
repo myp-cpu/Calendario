@@ -137,6 +137,49 @@ const RegistroEscolarApp = () => {
     });
   };
 
+  // Sort evaluations by year level (5, 6, 7, 8 for Middle; I, II, III, IV for Senior)
+  const sortEvaluationsByYearLevel = (evaluations) => {
+    if (!evaluations || evaluations.length === 0) return [];
+    
+    return [...evaluations].sort((a, b) => {
+      // Extract year level from curso
+      const getYearLevel = (curso) => {
+        // For Middle: 5°, 6°, 7°, 8°
+        if (curso.includes('5°')) return 5;
+        if (curso.includes('6°')) return 6;
+        if (curso.includes('7°')) return 7;
+        if (curso.includes('8°')) return 8;
+        
+        // For Senior: I EM, II EM, III EM, IV EM
+        if (curso.includes('I EM')) return 1;
+        if (curso.includes('II EM')) return 2;
+        if (curso.includes('III EM')) return 3;
+        if (curso.includes('IV EM')) return 4;
+        
+        // For Junior or other
+        return 0;
+      };
+      
+      const levelA = getYearLevel(a.curso);
+      const levelB = getYearLevel(b.curso);
+      
+      // Sort by year level first
+      if (levelA !== levelB) {
+        return levelA - levelB;
+      }
+      
+      // If same year level, sort by section (A before B before AB)
+      const getSectionOrder = (curso) => {
+        if (curso.includes(' A') && !curso.includes('AB')) return 1;
+        if (curso.includes(' B')) return 2;
+        if (curso.includes('AB')) return 3;
+        return 4;
+      };
+      
+      return getSectionOrder(a.curso) - getSectionOrder(b.curso);
+    });
+  };
+
   // Activity submission
   const handleActivitySubmit = (e) => {
     e.preventDefault();
