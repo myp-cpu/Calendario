@@ -234,6 +234,7 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
         <h1>Registro Escolar 2026 - Reporte de ${reportTitle}</h1>
         <p style="text-align: center; color: #6B7280; margin-bottom: 30px;">
           <strong>Sección:</strong> ${sectionName} | 
+          <strong>Nivel:</strong> ${nivelName} | 
           <strong>Período:</strong> ${formatDateForDisplay(dateFrom)} - ${formatDateForDisplay(dateTo)}
         </p>
     `;
