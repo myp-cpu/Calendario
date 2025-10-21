@@ -1,0 +1,131 @@
+# 📧 Instrucciones Rápidas - Activar Envío de Emails
+
+## ⚠️ ACCIÓN REQUERIDA
+
+El sistema está configurado con **myp@redland.cl** pero necesita la **App Password de Gmail** para funcionar.
+
+## 🚀 Pasos para Activar (5 minutos):
+
+### 1. Genera tu App Password de Gmail
+
+**a) Ve a tu cuenta de Google:**
+```
+https://myaccount.google.com/security
+```
+
+**b) Activa "Verificación en 2 pasos"** (si no está activa):
+- Busca la sección "Verificación en 2 pasos"
+- Haz click en "Empezar" o "Activar"
+- Sigue los pasos (necesitarás tu teléfono)
+
+**c) Genera la Contraseña de Aplicación:**
+- Una vez activada la verificación en 2 pasos
+- Busca "Contraseñas de aplicaciones" o accede directamente:
+  ```
+  https://myaccount.google.com/apppasswords
+  ```
+- Selecciona:
+  - Aplicación: **"Correo"** o **"Otra (nombre personalizado)"**
+  - Dispositivo: **"Otro (nombre personalizado)"** → Escribe: "Registro Escolar"
+- Click en **"Generar"**
+- Gmail te mostrará una contraseña de 16 caracteres como:
+  ```
+  xxxx xxxx xxxx xxxx
+  ```
+- **¡COPIA ESTA CONTRASEÑA!** (solo se muestra una vez)
+
+### 2. Configura el Sistema
+
+**Opción A: Editar directamente (Recomendado si tienes acceso)**
+
+1. Abre el archivo:
+   ```bash
+   nano /app/backend/.env
+   ```
+
+2. Busca esta línea:
+   ```
+   SMTP_PASSWORD="YOUR_GMAIL_APP_PASSWORD_HERE"
+   ```
+
+3. Reemplázala con tu App Password:
+   ```
+   SMTP_PASSWORD="xxxx xxxx xxxx xxxx"
+   ```
+   (Puedes dejar o quitar los espacios, ambos funcionan)
+
+4. Guarda el archivo (Ctrl+O, Enter, Ctrl+X)
+
+5. Reinicia el backend:
+   ```bash
+   sudo supervisorctl restart backend
+   ```
+
+**Opción B: Pide al agente que lo haga**
+- Simplemente responde en el chat con:
+  ```
+  La App Password es: xxxx xxxx xxxx xxxx
+  ```
+  Y el agente lo configurará automáticamente.
+
+### 3. Verifica que Funciona
+
+1. Abre el sistema web
+2. Click en el botón verde **"Imprimir"**
+3. Configura tu reporte
+4. Ingresa un email de prueba (puede ser el tuyo)
+5. Click en **"Enviar por Email"**
+6. ¡Deberías recibir el email en segundos!
+
+## 📋 Configuración Actual
+
+```bash
+# /app/backend/.env
+SMTP_SERVER="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_USER="myp@redland.cl"
+SMTP_PASSWORD="YOUR_GMAIL_APP_PASSWORD_HERE"  ← CAMBIAR ESTO
+SMTP_FROM="Registro Escolar Redland <myp@redland.cl>"
+```
+
+## 🐛 Solución de Problemas
+
+### "Invalid credentials" o "Authentication failed"
+- ❌ **NO uses tu contraseña normal de Gmail**
+- ✅ Debes usar la **App Password de 16 caracteres**
+- Verifica que la verificación en 2 pasos esté activa
+
+### "Less secure app"
+- Gmail ya no permite "aplicaciones menos seguras"
+- **DEBES** usar App Password (no hay otra opción)
+
+### Email no llega
+- Revisa la carpeta de **Spam**
+- Verifica que myp@redland.cl sea una cuenta válida de Gmail
+- Intenta enviar a tu propio email primero para probar
+
+### Contraseña perdida
+- No hay problema, genera una nueva App Password
+- Las viejas siguen funcionando hasta que las revoques
+
+## 🔒 Seguridad
+
+✅ **Buenas prácticas:**
+- La App Password solo sirve para esta aplicación
+- Puedes revocarla en cualquier momento sin afectar tu cuenta
+- No afecta tu contraseña principal de Gmail
+- Si cambias tu contraseña principal, la App Password sigue funcionando
+
+## 📞 ¿Necesitas Ayuda?
+
+Si tienes problemas:
+1. Revisa este archivo: `/app/CONFIGURACION_EMAIL.md` (más detallado)
+2. Pregunta al agente en el chat
+3. Los logs del backend están en: `/var/log/supervisor/backend.err.log`
+
+---
+
+⏱️ **Tiempo estimado**: 5 minutos
+🎯 **Resultado**: Sistema de email completamente funcional
+
+**Una vez configurado, podrás enviar reportes por email directamente desde el sistema!** ✨
