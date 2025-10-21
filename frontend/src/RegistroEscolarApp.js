@@ -951,7 +951,7 @@ const RegistroEscolarApp = () => {
                             ))}
                           </td>
                           <td className={`border border-gray-300 p-1 align-top ${isSaturday ? 'bg-purple-300' : (isSunday ? 'bg-gray-800' : 'bg-yellow-100')}`}>
-                            {(dayEvaluations.Middle || []).map(evaluation => renderEvaluation(evaluation, dateKey, 'Middle'))}
+                            {sortEvaluationsByYearLevel(dayEvaluations.Middle || []).map(evaluation => renderEvaluation(evaluation, dateKey, 'Middle'))}
                           </td>
                           
                           {/* Senior Activities & Responsible & Evaluations */}
@@ -966,7 +966,7 @@ const RegistroEscolarApp = () => {
                             ))}
                           </td>
                           <td className={`border border-gray-300 p-1 align-top ${isSaturday ? 'bg-purple-300' : (isSunday ? 'bg-gray-800' : 'bg-pink-100')}`}>
-                            {(dayEvaluations.Senior || []).map(evaluation => renderEvaluation(evaluation, dateKey, 'Senior'))}
+                            {sortEvaluationsByYearLevel(dayEvaluations.Senior || []).map(evaluation => renderEvaluation(evaluation, dateKey, 'Senior'))}
                           </td>
                         </tr>
                       );
