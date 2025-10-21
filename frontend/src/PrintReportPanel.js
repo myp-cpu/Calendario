@@ -253,33 +253,38 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
         
         sectionsToShow.forEach(sec => {
           if (dateData[sec] && dateData[sec].length > 0) {
-            hasContentForDate = true;
-            const badgeClass = sec === 'Junior' ? 'junior-badge' : sec === 'Middle' ? 'middle-badge' : 'senior-badge';
-            dateContent += `<h3>${sec} School <span class="section-badge ${badgeClass}">${sec}</span></h3>`;
+            // Apply nivel filter
+            let itemsToShow = filterByNivel(dateData[sec], nivel);
             
-            if (reportType === 'actividades') {
-              const sortedActivities = sortActivitiesByTime(dateData[sec]);
-              sortedActivities.forEach(activity => {
-                const importantClass = activity.importante ? 'important' : '';
-                const timeText = activity.hora === 'TODO EL DIA' ? '[TODO EL DÍA]' : `[${activity.hora}]`;
-                dateContent += `
-                  <div class="item activity-item ${importantClass}">
-                    <strong>${timeText}</strong> ${activity.actividad}
-                    ${activity.lugar ? `<br/><span class="meta-info">📍 Lugar: ${activity.lugar}</span>` : ''}
-                    ${activity.responsable ? `<br/><span class="meta-info">👤 Responsable: ${activity.responsable}</span>` : ''}
-                  </div>
-                `;
-              });
-            } else {
-              const sortedEvaluations = sortEvaluationsByYearLevel(dateData[sec]);
-              sortedEvaluations.forEach(evaluation => {
-                dateContent += `
-                  <div class="item evaluation-item">
-                    <strong>${evaluation.curso}:</strong> ${evaluation.asignatura}
-                    ${evaluation.tema ? `<br/><span class="meta-info">📝 Tema: ${evaluation.tema}</span>` : ''}
-                  </div>
-                `;
-              });
+            if (itemsToShow.length > 0) {
+              hasContentForDate = true;
+              const badgeClass = sec === 'Junior' ? 'junior-badge' : sec === 'Middle' ? 'middle-badge' : 'senior-badge';
+              dateContent += `<h3>${sec} School <span class="section-badge ${badgeClass}">${sec}</span></h3>`;
+              
+              if (reportType === 'actividades') {
+                const sortedActivities = sortActivitiesByTime(itemsToShow);
+                sortedActivities.forEach(activity => {
+                  const importantClass = activity.importante ? 'important' : '';
+                  const timeText = activity.hora === 'TODO EL DIA' ? '[TODO EL DÍA]' : `[${activity.hora}]`;
+                  dateContent += `
+                    <div class="item activity-item ${importantClass}">
+                      <strong>${timeText}</strong> ${activity.actividad}
+                      ${activity.lugar ? `<br/><span class="meta-info">📍 Lugar: ${activity.lugar}</span>` : ''}
+                      ${activity.responsable ? `<br/><span class="meta-info">👤 Responsable: ${activity.responsable}</span>` : ''}
+                    </div>
+                  `;
+                });
+              } else {
+                const sortedEvaluations = sortEvaluationsByYearLevel(itemsToShow);
+                sortedEvaluations.forEach(evaluation => {
+                  dateContent += `
+                    <div class="item evaluation-item">
+                      <strong>${evaluation.curso}:</strong> ${evaluation.asignatura}
+                      ${evaluation.tema ? `<br/><span class="meta-info">📝 Tema: ${evaluation.tema}</span>` : ''}
+                    </div>
+                  `;
+                });
+              }
             }
           }
         });
