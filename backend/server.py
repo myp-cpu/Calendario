@@ -6,6 +6,9 @@ from pathlib import Path
 import os
 import pandas as pd
 import io
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 from jose import JWTError, jwt
