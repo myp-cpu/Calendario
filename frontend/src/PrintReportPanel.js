@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { BACKEND_URL } from './config';
 import { parseJsonOnce } from '@/services/authService';
 import jsPDF from 'jspdf';
@@ -12,7 +12,6 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
   const [dateTo, setDateTo] = useState('');
   const [emailTo, setEmailTo] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
-  const reportRef = useRef(null);
 
   // Get available niveles based on selected section
   const getNivelesOptions = () => {
@@ -661,15 +660,8 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
     return html;
   };
 
-  const generateReportHTML = () => {
-    // Keep old function for backward compatibility, but use new export function
-    return exportFullReportHTML();
-  };
-  
-  // Alias for backward compatibility
-  const generateFullReportHTML = () => {
-    return exportFullReportHTML();
-  };
+  // Removed unused functions: generateReportHTML, generateFullReportHTML
+  // These were aliases for exportFullReportHTML() but were never called
 
   const handlePrint = async () => {
     if (!dateFrom || !dateTo) {
@@ -1296,12 +1288,8 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
     pdf.save(fileName);
   };
 
-  // Get official report HTML - same HTML used for browser PDF
-  const getOfficialReportHTML = () => {
-    // Use the same HTML generator that creates the perfect PDF
-    // This HTML has ALL inline styles and is identical to what Chrome would print
-    return exportFullReportHTML();
-  };
+  // Removed unused function: getOfficialReportHTML
+  // This was an alias for exportFullReportHTML() but was never called
 
   // Generate PDF using the SAME method as handlePrint
   // This ensures the PDF is EXACTLY the same as the one downloaded from browser

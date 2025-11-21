@@ -224,31 +224,8 @@ const UserManagementPanel = ({ onClose }) => {
     setTempRole(null);
   };
 
-  const handleExportCSV = async () => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/users/export-csv`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'usuarios_export.csv';
-        a.click();
-        window.URL.revokeObjectURL(url);
-        setMessage({ type: 'success', text: 'Usuarios exportados exitosamente' });
-      } else {
-        const data = await parseJsonOnce(response);
-        setMessage({ type: 'error', text: data.detail || 'Error al exportar usuarios' });
-      }
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Error al exportar usuarios' });
-    }
-  };
+  // Removed unused function: handleExportCSV
+  // This function was defined but never called in the component
 
   const downloadSampleCSV = () => {
     const csv = 'email,role\nnombre.apellido@redland.cl,editor\nnombre2.apellido2@redland.cl,viewer';
