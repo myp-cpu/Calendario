@@ -202,7 +202,7 @@ const Footer = ({ mode }) => (
   </div>
 );
 
-const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
+const RegistroEscolarApp = () => {
   const { user, logout, isEditor, token } = useAuth();
   
   // State management
@@ -231,7 +231,7 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
   });
   const [editingActivity, setEditingActivity] = useState(null);
   const [editingEvaluation, setEditingEvaluation] = useState(null);
-  const [showUserManagement, setShowUserManagement] = useState(autoOpenUserManagement);
+  const [showUserManagement, setShowUserManagement] = useState(false);
   const [showPrintReport, setShowPrintReport] = useState(false);
   
   // Filter states
@@ -258,12 +258,6 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
   const toggleDarkMode = () => {
     setIsDarkMode(prev => !prev);
   };
-  
-  useEffect(() => {
-    if (autoOpenUserManagement) {
-      setShowUserManagement(true);
-    }
-  }, [autoOpenUserManagement]);
 
   // Helper function to convert date to YYYY-MM-DD format
   const getDateKey = (date) => {

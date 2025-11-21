@@ -14,8 +14,8 @@ const LoginPage = () => {
   useEffect(() => {
     if (authLoading) return;
     if (isAuthenticated && user) {
-      const fallback = user.role === "editor" ? "/admin" : "/";
-      const destination = location.state?.from?.pathname || fallback;
+      // Siempre redirigir a la vista principal del calendario, independientemente del rol
+      const destination = location.state?.from?.pathname || "/";
       navigate(destination, { replace: true });
     }
   }, [authLoading, isAuthenticated, user, location, navigate]);
@@ -49,8 +49,8 @@ const LoginPage = () => {
         isSubmittingRef.current = false;
         return;
       }
-      const fallback = result.user?.role === 'editor' ? '/admin' : '/';
-      const destination = location.state?.from?.pathname || fallback;
+      // Siempre redirigir a la vista principal del calendario, independientemente del rol
+      const destination = location.state?.from?.pathname || '/';
       navigate(destination, { replace: true });
     } catch (err) {
       console.error("Login error in handleSubmit:", err);
