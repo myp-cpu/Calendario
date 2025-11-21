@@ -58,7 +58,7 @@ export const login = async ({ email }) => {
     throw new Error("La URL del backend no está configurada");
   }
 
-  const loginUrl = `${BACKEND_URL}/api/auth/login`;
+  const loginUrl = `${BACKEND_URL}/auth/login`;
   console.log("[AuthService] Attempting login to:", loginUrl);
 
   try {
@@ -90,7 +90,7 @@ export const fetchCurrentUser = async (token) => {
   }
 
   try {
-    const response = await fetch(`${BACKEND_URL}/api/auth/me`, {
+    const response = await fetch(`${BACKEND_URL}/auth/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

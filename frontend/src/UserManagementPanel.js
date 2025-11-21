@@ -18,7 +18,7 @@ const UserManagementPanel = ({ onClose }) => {
   // Load users
   const loadUsers = useCallback(async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/users`, {
+      const response = await fetch(`${BACKEND_URL}/users`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -55,7 +55,7 @@ const UserManagementPanel = ({ onClose }) => {
       const formData = new FormData();
       formData.append('file', csvFile);
 
-      const response = await fetch(`${BACKEND_URL}/api/users/upload-csv`, {
+      const response = await fetch(`${BACKEND_URL}/users/upload-csv`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -130,7 +130,7 @@ const UserManagementPanel = ({ onClose }) => {
       const formData = new FormData();
       formData.append('file', deleteCsvFile);
 
-      const response = await fetch(`${BACKEND_URL}/api/users/delete-csv`, {
+      const response = await fetch(`${BACKEND_URL}/users/delete-csv`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -170,7 +170,7 @@ const UserManagementPanel = ({ onClose }) => {
     }
 
     try {
-      const response = await fetch(`${BACKEND_URL}/api/users/${encodeURIComponent(email)}`, {
+      const response = await fetch(`${BACKEND_URL}/users/${encodeURIComponent(email)}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -196,7 +196,7 @@ const UserManagementPanel = ({ onClose }) => {
 
   const handleSaveRole = async (email) => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/users/${encodeURIComponent(email)}/role`, {
+      const response = await fetch(`${BACKEND_URL}/users/${encodeURIComponent(email)}/role`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

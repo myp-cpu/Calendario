@@ -18,7 +18,7 @@ export const fetchActivities = async (token, dateFrom = null, dateTo = null, sec
     throw new Error("La URL del backend no está configurada");
   }
 
-  let url = `${BACKEND_URL}/api/activities?`;
+  let url = `${BACKEND_URL}/activities?`;
   const params = new URLSearchParams();
   if (dateFrom) params.append("date_from", dateFrom);
   if (dateTo) params.append("date_to", dateTo);
@@ -50,7 +50,7 @@ export const createActivity = async (token, activity) => {
     throw new Error("La URL del backend no está configurada");
   }
 
-  const response = await fetch(`${BACKEND_URL}/api/activities`, {
+  const response = await fetch(`${BACKEND_URL}/activities`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -81,7 +81,7 @@ export const updateActivity = async (token, activityId, activity) => {
     throw new Error("La URL del backend no está configurada");
   }
 
-  const response = await fetch(`${BACKEND_URL}/api/activities/${activityId}`, {
+  const response = await fetch(`${BACKEND_URL}/activities/${activityId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -109,7 +109,7 @@ export const deleteActivity = async (token, activityId) => {
     throw new Error("La URL del backend no está configurada");
   }
 
-  const response = await fetch(`${BACKEND_URL}/api/activities/${activityId}`, {
+  const response = await fetch(`${BACKEND_URL}/activities/${activityId}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -136,7 +136,7 @@ export const fetchEvaluations = async (token, dateFrom = null, dateTo = null, se
     throw new Error("La URL del backend no está configurada");
   }
 
-  let url = `${BACKEND_URL}/api/evaluations?`;
+  let url = `${BACKEND_URL}/evaluations?`;
   const params = new URLSearchParams();
   if (dateFrom) params.append("date_from", dateFrom);
   if (dateTo) params.append("date_to", dateTo);
@@ -168,7 +168,7 @@ export const createEvaluation = async (token, evaluation) => {
     throw new Error("La URL del backend no está configurada");
   }
 
-  const response = await fetch(`${BACKEND_URL}/api/evaluations`, {
+  const response = await fetch(`${BACKEND_URL}/evaluations`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -197,7 +197,7 @@ export const updateEvaluation = async (token, evaluationId, evaluation) => {
     throw new Error("La URL del backend no está configurada");
   }
 
-  const response = await fetch(`${BACKEND_URL}/api/evaluations/${evaluationId}`, {
+  const response = await fetch(`${BACKEND_URL}/evaluations/${evaluationId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -225,7 +225,7 @@ export const deleteEvaluation = async (token, evaluationId) => {
     throw new Error("La URL del backend no está configurada");
   }
 
-  const response = await fetch(`${BACKEND_URL}/api/evaluations/${evaluationId}`, {
+  const response = await fetch(`${BACKEND_URL}/evaluations/${evaluationId}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,

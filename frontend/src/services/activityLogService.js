@@ -19,7 +19,7 @@ export const getActivityLogs = async (token, filters = {}) => {
     if (filters.seccion) params.append('seccion', filters.seccion);
     
     const queryString = params.toString();
-    const url = `${BACKEND_URL}/api/activity-logs${queryString ? '?' + queryString : ''}`;
+    const url = `${BACKEND_URL}/activity-logs${queryString ? '?' + queryString : ''}`;
     
     const response = await fetch(url, {
       method: 'GET',

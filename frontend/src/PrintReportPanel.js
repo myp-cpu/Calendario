@@ -1956,7 +1956,7 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
       formData.append('dateTo', dateTo);
 
       // Send PDF file to backend
-      const response = await fetch(`${BACKEND_URL}/api/send-report-email`, {
+      const response = await fetch(`${BACKEND_URL}/send-report-email`, {
         method: 'POST',
         body: formData // Send as FormData, not JSON
       });
