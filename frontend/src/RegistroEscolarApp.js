@@ -350,38 +350,39 @@ const RegistroEscolarApp = () => {
   }, [token, user, loadActivities, loadEvaluations]);
 
   // Generate weeks - memoized to avoid recalculation on every render
-  // EXCLUDES SUNDAYS (weekday 6)
+  // INCLUDES Monday-Saturday (6 days), EXCLUDES SUNDAYS
+  // JavaScript getDay(): 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
   const weeks = useMemo(() => {
     const weeksArray = [];
     let currentDate = new Date(schoolYearStart);
     let weekNumber = 0;
 
-    // Skip to Monday if start date is Sunday
-    while (currentDate <= schoolYearEnd && currentDate.getDay() === 6) {
+    // Skip to Monday if start date is Sunday (getDay() === 0)
+    while (currentDate <= schoolYearEnd && currentDate.getDay() === 0) {
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
     while (currentDate <= schoolYearEnd) {
       const weekDays = [];
       
-      // Collect days for this week (Monday to Saturday only, NO SUNDAYS)
+      // Collect days for this week (Monday to Saturday, EXCLUDE SUNDAYS)
       while (currentDate <= schoolYearEnd) {
         const dayOfWeek = currentDate.getDay();
         
-        // Skip Sundays (dayOfWeek === 6)
-        if (dayOfWeek === 6) {
+        // Skip Sundays (getDay() === 0)
+        if (dayOfWeek === 0) {
           currentDate.setDate(currentDate.getDate() + 1);
           continue;
         }
         
-        // Add current day (Monday to Saturday only)
+        // Add current day (Monday to Saturday)
         weekDays.push(new Date(currentDate));
         
-        // If this is Saturday, end the week
-        if (dayOfWeek === 5) {
+        // If this is Saturday (getDay() === 6), end the week
+        if (dayOfWeek === 6) {
           currentDate.setDate(currentDate.getDate() + 1);
-          // Skip Sunday
-          if (currentDate.getDay() === 6) {
+          // Skip Sunday if it exists
+          if (currentDate <= schoolYearEnd && currentDate.getDay() === 0) {
             currentDate.setDate(currentDate.getDate() + 1);
           }
           break; // End of week

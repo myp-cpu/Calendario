@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { getActivityLogs } from '../services/activityLogService';
 import jsPDF from 'jspdf';
+import LogoRedland from '../logo/imalogotipo-blanco_sinfondo_2.png';
 
 const ActivityLogPage = () => {
   const navigate = useNavigate();
@@ -67,68 +68,139 @@ const ActivityLogPage = () => {
     return actionData;
   };
 
-  // Export to PDF
-  const exportToPDF = () => {
+  // Export to PDF with institutional format (same as PrintReportPanel)
+  const exportToPDF = async () => {
     if (logs.length === 0) {
       alert('No hay logs para exportar');
       return;
     }
 
     const pdf = new jsPDF({
-      orientation: 'landscape',
+      orientation: 'portrait',
       unit: 'mm',
       format: 'a4'
     });
 
-    // Colors (same as PrintReportPanel)
+    // Corporate colors (same as PrintReportPanel)
+    const navyBlue = [26, 35, 70]; // #1A2346
     const redCorporate = [197, 32, 58]; // #C5203A
     const white = [255, 255, 255];
     const black = [0, 0, 0];
-    const grayLight = [245, 247, 250];
-    const grayDark = [107, 114, 128];
+    const grayLight = [247, 247, 247]; // #F7F7F7
+    const grayDark = [100, 100, 100];
 
-    // Helper to escape HTML
-    const escapeHtml = (text) => {
-      if (!text) return '';
-      return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    // Margins
+    const marginLeft = 10;
+    const marginRight = 10;
+    const marginBottom = 20;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const headerHeight = 39;
+    let yPosition = 0;
+
+    // Helper function to add new page with header
+    const addPageWithHeader = () => {
+      pdf.addPage();
+      pdf.setFillColor(...navyBlue);
+      pdf.rect(0, 0, pageWidth, headerHeight, 'F');
+      
+      // Logo (async, will be added if available)
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const logoHeight = 22;
+          const logoWidth = (img.width / img.height) * logoHeight;
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          const imgData = canvas.toDataURL('image/png');
+          const logoY = (headerHeight - logoHeight) / 2;
+          pdf.addImage(imgData, 'PNG', marginLeft, logoY, logoWidth, logoHeight);
+        } catch (err) {
+          console.error('Error adding logo:', err);
+        }
+      };
+      img.src = LogoRedland;
+      
+      pdf.setFontSize(20);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(...white);
+      pdf.text('REDLAND SCHOOL', pageWidth / 2, headerHeight / 2 - 3, { align: 'center' });
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2 + 6, { align: 'center' });
     };
 
-    let yPos = 20;
-    const pageHeight = pdf.internal.pageSize.height;
-    const pageWidth = pdf.internal.pageSize.width;
-    const margin = 15;
-    const tableStartX = margin;
-    const tableWidth = pageWidth - (margin * 2);
-    const colWidths = {
-      timestamp: 32,
-      user: 32,
-      action: 20,
-      entity: 20,
-      entityId: 18,
-      before: 30,
-      after: 30
-    };
+    // Add corporate header on first page
+    pdf.setFillColor(...navyBlue);
+    pdf.rect(0, 0, pageWidth, headerHeight, 'F');
 
-    // Header
-    pdf.setFillColor(...redCorporate);
-    pdf.rect(0, 0, pageWidth, 15, 'F');
+    // Load logo and add to header (async)
+    try {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      await new Promise((resolve) => {
+        img.onload = () => {
+          try {
+            const logoHeight = 22;
+            const logoWidth = (img.width / img.height) * logoHeight;
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const imgData = canvas.toDataURL('image/png');
+            const logoY = (headerHeight - logoHeight) / 2;
+            pdf.addImage(imgData, 'PNG', marginLeft, logoY, logoWidth, logoHeight);
+          } catch (err) {
+            console.error('Error processing logo:', err);
+          }
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = LogoRedland;
+      });
+    } catch (error) {
+      console.error('Error loading logo:', error);
+    }
+
+    // Title and subtitle in header
+    pdf.setFontSize(20);
+    pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(...white);
+    pdf.text('REDLAND SCHOOL', pageWidth / 2, headerHeight / 2 - 3, { align: 'center' });
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2 + 6, { align: 'center' });
+
+    yPosition = headerHeight + 10;
+
+    // Title: Reporte de Auditoría
     pdf.setFontSize(16);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Reporte de Auditoría - Gestión de Actividad', pageWidth / 2, 10, { align: 'center' });
-
-    // Report date
     pdf.setTextColor(...black);
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
-    const reportDate = new Date().toLocaleDateString('es-CL', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-    pdf.text(`Fecha del reporte: ${reportDate}`, margin, 22);
+    pdf.text('Reporte de Auditoría – Gestión de Actividad', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 8;
 
-    yPos = 28;
+    // Subtitle
+    pdf.setFontSize(11);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(...grayDark);
+    pdf.text('Historial de modificaciones del sistema', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 8;
+
+    // Report date (formatted as "Día Mes Año")
+    const now = new Date();
+    const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const reportDate = `${now.getDate()} de ${months[now.getMonth()]} de ${now.getFullYear()}`;
+    pdf.setFontSize(10);
+    pdf.setTextColor(...black);
+    pdf.text(`Fecha del reporte: ${reportDate}`, marginLeft, yPosition);
+    yPosition += 7;
 
     // Filters applied
     const activeFilters = [];
@@ -141,117 +213,137 @@ const ActivityLogPage = () => {
 
     if (activeFilters.length > 0) {
       pdf.setFontSize(9);
-      pdf.text('Filtros aplicados:', margin, yPos);
-      yPos += 5;
+      pdf.setTextColor(...black);
+      pdf.text('Filtros aplicados:', marginLeft, yPosition);
+      yPosition += 5;
       activeFilters.forEach(filter => {
-        pdf.text(`  • ${filter}`, margin + 2, yPos);
-        yPos += 4;
+        pdf.text(`  • ${filter}`, marginLeft + 2, yPosition);
+        yPosition += 4;
       });
-      yPos += 3;
+      yPosition += 3;
+    }
+
+    // Table setup
+    const tableStartX = marginLeft;
+    const tableWidth = pageWidth - marginLeft - marginRight;
+    const colWidths = {
+      timestamp: 35,
+      user: 30,
+      action: 20,
+      entity: 20,
+      entityId: 18,
+      before: 30,
+      after: 30
+    };
+    const rowHeight = 7;
+
+    // Check if page break needed before table
+    if (yPosition + 8 + rowHeight > pageHeight - marginBottom) {
+      addPageWithHeader();
+      yPosition = headerHeight + 10;
     }
 
     // Table header
     pdf.setFillColor(...redCorporate);
-    pdf.rect(tableStartX, yPos, tableWidth, 8, 'F');
+    pdf.rect(tableStartX, yPosition, tableWidth, 8, 'F');
     pdf.setTextColor(...white);
-    pdf.setFontSize(8);
+    pdf.setFontSize(9);
     pdf.setFont('helvetica', 'bold');
     
     let xPos = tableStartX;
-    pdf.text('Timestamp', xPos + 2, yPos + 5);
+    pdf.text('Fecha/Hora', xPos + 2, yPosition + 5);
     xPos += colWidths.timestamp;
-    pdf.text('Usuario', xPos + 2, yPos + 5);
+    pdf.text('Usuario', xPos + 2, yPosition + 5);
     xPos += colWidths.user;
-    pdf.text('Acción', xPos + 2, yPos + 5);
+    pdf.text('Acción', xPos + 2, yPosition + 5);
     xPos += colWidths.action;
-    pdf.text('Entidad', xPos + 2, yPos + 5);
+    pdf.text('Entidad', xPos + 2, yPosition + 5);
     xPos += colWidths.entity;
-    pdf.text('ID', xPos + 2, yPos + 5);
+    pdf.text('ID', xPos + 2, yPosition + 5);
     xPos += colWidths.entityId;
-    pdf.text('Antes', xPos + 2, yPos + 5);
+    pdf.text('Antes', xPos + 2, yPosition + 5);
     xPos += colWidths.before;
-    pdf.text('Después', xPos + 2, yPos + 5);
+    pdf.text('Después', xPos + 2, yPosition + 5);
 
-    yPos += 8;
-    const rowHeight = 6;
+    yPosition += 8;
 
     // Table rows
     logs.forEach((log, index) => {
       // Check if new page needed
-      if (yPos + rowHeight > pageHeight - margin) {
-        pdf.addPage();
-        yPos = margin;
-        // Redraw header on new page
+      if (yPosition + rowHeight > pageHeight - marginBottom) {
+        addPageWithHeader();
+        yPosition = headerHeight + 10;
+        
+        // Redraw table header on new page
         pdf.setFillColor(...redCorporate);
-        pdf.rect(tableStartX, yPos, tableWidth, 8, 'F');
+        pdf.rect(tableStartX, yPosition, tableWidth, 8, 'F');
         pdf.setTextColor(...white);
-        pdf.setFontSize(8);
+        pdf.setFontSize(9);
         pdf.setFont('helvetica', 'bold');
         xPos = tableStartX;
-        pdf.text('Timestamp', xPos + 2, yPos + 5);
+        pdf.text('Fecha/Hora', xPos + 2, yPosition + 5);
         xPos += colWidths.timestamp;
-        pdf.text('Usuario', xPos + 2, yPos + 5);
+        pdf.text('Usuario', xPos + 2, yPosition + 5);
         xPos += colWidths.user;
-        pdf.text('Acción', xPos + 2, yPos + 5);
+        pdf.text('Acción', xPos + 2, yPosition + 5);
         xPos += colWidths.action;
-        pdf.text('Entidad', xPos + 2, yPos + 5);
+        pdf.text('Entidad', xPos + 2, yPosition + 5);
         xPos += colWidths.entity;
-        pdf.text('ID', xPos + 2, yPos + 5);
+        pdf.text('ID', xPos + 2, yPosition + 5);
         xPos += colWidths.entityId;
-        pdf.text('Antes', xPos + 2, yPos + 5);
+        pdf.text('Antes', xPos + 2, yPosition + 5);
         xPos += colWidths.before;
-        pdf.text('Después', xPos + 2, yPos + 5);
-        yPos += 8;
+        pdf.text('Después', xPos + 2, yPosition + 5);
+        yPosition += 8;
       }
 
-      // Row background
+      // Row background (alternate colors like institutional report)
       if (index % 2 === 0) {
         pdf.setFillColor(...grayLight);
-        pdf.rect(tableStartX, yPos, tableWidth, rowHeight, 'F');
+        pdf.rect(tableStartX, yPosition, tableWidth, rowHeight, 'F');
       }
 
       // Row content
       pdf.setTextColor(...black);
-      pdf.setFontSize(7);
+      pdf.setFontSize(8);
       pdf.setFont('helvetica', 'normal');
 
       xPos = tableStartX;
-      pdf.text(formatTimestamp(log.timestamp).substring(0, 16), xPos + 1, yPos + 4, { maxWidth: colWidths.timestamp - 2 });
+      pdf.text(formatTimestamp(log.timestamp).substring(0, 18), xPos + 1, yPosition + 4.5, { maxWidth: colWidths.timestamp - 2 });
       xPos += colWidths.timestamp;
-      pdf.text((log.user || '').substring(0, 20), xPos + 1, yPos + 4, { maxWidth: colWidths.user - 2 });
+      pdf.text((log.user || '').substring(0, 22), xPos + 1, yPosition + 4.5, { maxWidth: colWidths.user - 2 });
       xPos += colWidths.user;
       
       const actionText = log.action === 'create' ? 'Crear' : log.action === 'update' ? 'Actualizar' : log.action === 'delete' ? 'Eliminar' : log.action;
-      pdf.text(actionText.substring(0, 12), xPos + 1, yPos + 4, { maxWidth: colWidths.action - 2 });
+      pdf.text(actionText, xPos + 1, yPosition + 4.5, { maxWidth: colWidths.action - 2 });
       xPos += colWidths.action;
       
       const entityText = log.entity === 'activity' ? 'Actividad' : log.entity === 'evaluation' ? 'Evaluación' : log.entity;
-      pdf.text(entityText.substring(0, 12), xPos + 1, yPos + 4, { maxWidth: colWidths.entity - 2 });
+      pdf.text(entityText, xPos + 1, yPosition + 4.5, { maxWidth: colWidths.entity - 2 });
       xPos += colWidths.entity;
       
-      pdf.text((log.entity_id || '').substring(0, 8), xPos + 1, yPos + 4, { maxWidth: colWidths.entityId - 2 });
+      pdf.text((log.entity_id || '').substring(0, 10), xPos + 1, yPosition + 4.5, { maxWidth: colWidths.entityId - 2 });
       xPos += colWidths.entityId;
       
       const beforeText = log.before?.seccion || (log.before?.actividad ? 'Act: ' + log.before.actividad.substring(0, 15) : '') || (log.before?.asignatura ? 'Asig: ' + log.before.asignatura : '') || '-';
-      pdf.text(String(beforeText).substring(0, 20), xPos + 1, yPos + 4, { maxWidth: colWidths.before - 2 });
+      pdf.text(String(beforeText).substring(0, 22), xPos + 1, yPosition + 4.5, { maxWidth: colWidths.before - 2 });
       xPos += colWidths.before;
       
       const afterText = log.after?.seccion || (log.after?.actividad ? 'Act: ' + log.after.actividad.substring(0, 15) : '') || (log.after?.asignatura ? 'Asig: ' + log.after.asignatura : '') || '-';
-      pdf.text(String(afterText).substring(0, 20), xPos + 1, yPos + 4, { maxWidth: colWidths.after - 2 });
+      pdf.text(String(afterText).substring(0, 22), xPos + 1, yPosition + 4.5, { maxWidth: colWidths.after - 2 });
 
-      yPos += rowHeight;
+      yPosition += rowHeight;
     });
 
-    // Footer
+    // Footer on all pages
     const totalPages = pdf.internal.pages.length - 1;
+    const footerDate = `${now.getDate()} de ${months[now.getMonth()]} de ${now.getFullYear()}`;
     for (let i = 1; i <= totalPages; i++) {
       pdf.setPage(i);
       pdf.setFontSize(8);
       pdf.setTextColor(...grayDark);
-      pdf.text(`Página ${i} de ${totalPages}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
-      const now = new Date();
-      const dateStr = now.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-      pdf.text(`Generado el ${dateStr}`, pageWidth / 2, pageHeight - 2, { align: 'center' });
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Generado el ${footerDate} | Registro Escolar Web | Redland School`, pageWidth / 2, pageHeight - 5, { align: 'center' });
     }
 
     // Save PDF
@@ -276,28 +368,26 @@ const ActivityLogPage = () => {
         {/* Header */}
         <div className="bg-white dark:bg-[#121C39] rounded-lg shadow-md p-4 sm:p-6 mb-4 border border-gray-200 dark:border-gray-700">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-3 flex-1">
-              <button
-                onClick={() => navigate('/')}
-                className="bg-[#1A2346] dark:bg-[#121C39] text-white px-3 py-2 rounded-lg hover:bg-[#121C39] dark:hover:bg-[#0F1425] text-sm font-medium shadow-sm hover:shadow-md transition-all whitespace-nowrap flex items-center gap-2"
-                title="Volver al calendario"
-              >
-                ⬅️ Volver al calendario
-              </button>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-2">
-                  📋 Gestión de Actividad (Auditoría)
-                </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Historial completo de todas las acciones realizadas en el sistema
-                </p>
-              </div>
+            <button
+              onClick={() => navigate('/')}
+              className="bg-[#1A2346] dark:bg-[#121C39] text-white px-3 py-2 rounded-lg hover:bg-[#121C39] dark:hover:bg-[#0F1425] text-sm font-medium shadow-sm hover:shadow-md transition-all whitespace-nowrap"
+              title="Volver al calendario"
+            >
+              Volver al calendario
+            </button>
+            <div className="flex-1 text-center">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-2">
+                Gestión de Actividad
+              </h1>
+              <p className="text-sm text-gray-600 dark:text-gray-300 text-left">
+                Historial completo de todas las acciones realizadas en el sistema
+              </p>
             </div>
             <button
               onClick={exportToPDF}
               className="bg-[#1A2346] dark:bg-[#121C39] text-white px-4 py-2 rounded-lg hover:bg-[#121C39] dark:hover:bg-[#0F1425] text-sm font-medium shadow-sm hover:shadow-md transition-all whitespace-nowrap"
             >
-              📄 Exportar PDF
+              Exportar PDF
             </button>
           </div>
         </div>
@@ -501,4 +591,3 @@ const ActivityLogPage = () => {
 };
 
 export default ActivityLogPage;
-
