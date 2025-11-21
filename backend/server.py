@@ -47,6 +47,7 @@ db = client[os.environ.get('DB_NAME', 'registro_escolar_db')]
 users_collection = db['users']
 registro_activities_collection = db['registro_activities']
 registro_evaluations_collection = db['registro_evaluations']
+activity_logs_collection = db['activity_logs']
 
 # Authentication configuration
 SECRET_KEY = os.environ.get("SECRET_KEY", "your-secret-key-change-this-in-production")
@@ -95,6 +96,43 @@ async def get_current_admin_user(current_user: dict = Depends(get_current_user))
     if current_user.get("role") != "editor":
         raise HTTPException(status_code=403, detail="Not enough permissions. Editor role required.")
     return current_user
+
+def is_sunday(date_string: str) -> bool:
+    """
+    Check if a date string (YYYY-MM-DD) is a Sunday
+    Returns True if the date is Sunday (weekday 6), False otherwise
+    """
+    try:
+        date_obj = datetime.strptime(date_string, "%Y-%m-%d")
+        return date_obj.weekday() == 6  # 6 = Sunday
+    except:
+        return False
+
+def log_activity_action(
+    user_email: str,
+    action: str,  # "create", "update", "delete"
+    entity: str,  # "activity" or "evaluation"
+    entity_id: str,
+    before: dict | None = None,
+    after: dict | None = None
+):
+    """
+    Log an activity/evaluation action to activity_logs collection
+    """
+    try:
+        log_entry = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "user": user_email,
+            "action": action,
+            "entity": entity,
+            "entity_id": str(entity_id),
+            "before": before,
+            "after": after
+        }
+        activity_logs_collection.insert_one(log_entry)
+    except Exception as e:
+        # Logging errors should not break the main flow
+        print(f"Error logging activity action: {e}")
 
 def validate_redland_email(email: str) -> bool:
     """Validate that email is from @redland.cl domain (only in production)"""
@@ -841,6 +879,14 @@ async def create_activity(
         if activity.seccion not in ["Junior", "Middle", "Senior", "ALL"]:
             raise HTTPException(status_code=400, detail="Invalid seccion. Must be Junior, Middle, Senior, or ALL")
         
+        # Validate that fecha is not Sunday
+        if activity.fecha and is_sunday(activity.fecha):
+            raise HTTPException(status_code=400, detail="No se permiten actividades en Domingo")
+        
+        # Validate fechaFin if provided
+        if activity.fechaFin and is_sunday(activity.fechaFin):
+            raise HTTPException(status_code=400, detail="No se permiten actividades en Domingo (fecha de término)")
+        
         # Base activity data (common to all activities)
         base_activity_data = {
             "actividad": activity.actividad,
@@ -869,6 +915,16 @@ async def create_activity(
                 }
                 result = registro_activities_collection.insert_one(activity_doc)
                 inserted_ids.append(str(result.inserted_id))
+                
+                # Log each creation
+                log_activity_action(
+                    user_email=current_user["email"],
+                    action="create",
+                    entity="activity",
+                    entity_id=str(result.inserted_id),
+                    before=None,
+                    after=serialize_activity(activity_doc)
+                )
             
             return {
                 "success": True,
@@ -884,6 +940,16 @@ async def create_activity(
             
             result = registro_activities_collection.insert_one(activity_doc)
             activity_doc["_id"] = result.inserted_id
+            
+            # Log the creation
+            log_activity_action(
+                user_email=current_user["email"],
+                action="create",
+                entity="activity",
+                entity_id=str(result.inserted_id),
+                before=None,
+                after=serialize_activity(activity_doc)
+            )
             
             return {
                 "success": True,
@@ -971,6 +1037,17 @@ async def update_activity(
         if not existing:
             raise HTTPException(status_code=404, detail="Activity not found")
         
+        # Validate that fecha is not Sunday
+        if activity.fecha and is_sunday(activity.fecha):
+            raise HTTPException(status_code=400, detail="No se permiten actividades en Domingo")
+        
+        # Validate fechaFin if provided
+        if activity.fechaFin and is_sunday(activity.fechaFin):
+            raise HTTPException(status_code=400, detail="No se permiten actividades en Domingo (fecha de término)")
+        
+        # Store before state for logging
+        before_state = serialize_activity(existing)
+        
         # Update activity
         update_data = {
             "seccion": activity.seccion,
@@ -996,10 +1073,21 @@ async def update_activity(
         )
         
         updated = registro_activities_collection.find_one({"_id": obj_id})
+        after_state = serialize_activity(updated)
+        
+        # Log the update
+        log_activity_action(
+            user_email=current_user["email"],
+            action="update",
+            entity="activity",
+            entity_id=activity_id,
+            before=before_state,
+            after=after_state
+        )
         
         return {
             "success": True,
-            "activity": serialize_activity(updated)
+            "activity": after_state
         }
     except HTTPException:
         raise
@@ -1023,10 +1111,27 @@ async def delete_activity(
         except:
             raise HTTPException(status_code=400, detail="Invalid activity ID")
         
+        # Store before state for logging (before deletion)
+        existing = registro_activities_collection.find_one({"_id": obj_id})
+        if not existing:
+            raise HTTPException(status_code=404, detail="Activity not found")
+        
+        before_state = serialize_activity(existing)
+        
         result = registro_activities_collection.delete_one({"_id": obj_id})
         
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Activity not found")
+        
+        # Log the deletion
+        log_activity_action(
+            user_email=current_user["email"],
+            action="delete",
+            entity="activity",
+            entity_id=activity_id,
+            before=before_state,
+            after=None
+        )
         
         return {
             "success": True,
@@ -1052,6 +1157,10 @@ async def create_evaluation(
         # Validate seccion
         if evaluation.seccion not in ["Junior", "Middle", "Senior"]:
             raise HTTPException(status_code=400, detail="Invalid seccion. Must be Junior, Middle, or Senior")
+        
+        # Validate that fecha is not Sunday
+        if evaluation.fecha and is_sunday(evaluation.fecha):
+            raise HTTPException(status_code=400, detail="No se permiten evaluaciones en Domingo")
         
         # Validate cursos array - debe ser una lista no vacía
         if not isinstance(evaluation.cursos, list):
@@ -1081,10 +1190,21 @@ async def create_evaluation(
         
         result = registro_evaluations_collection.insert_one(evaluation_doc)
         evaluation_doc["_id"] = result.inserted_id
+        serialized_eval = serialize_evaluation(evaluation_doc)
+        
+        # Log the creation
+        log_activity_action(
+            user_email=current_user["email"],
+            action="create",
+            entity="evaluation",
+            entity_id=str(result.inserted_id),
+            before=None,
+            after=serialized_eval
+        )
         
         return {
             "success": True,
-            "evaluation": serialize_evaluation(evaluation_doc)
+            "evaluation": serialized_eval
         }
     except HTTPException:
         raise
@@ -1170,6 +1290,10 @@ async def update_evaluation(
         if not existing:
             raise HTTPException(status_code=404, detail="Evaluation not found")
         
+        # Validate that fecha is not Sunday
+        if evaluation.fecha and is_sunday(evaluation.fecha):
+            raise HTTPException(status_code=400, detail="No se permiten evaluaciones en Domingo")
+        
         # Validate cursos array - debe ser una lista no vacía
         if not isinstance(evaluation.cursos, list):
             raise HTTPException(status_code=400, detail="cursos must be an array")
@@ -1196,6 +1320,9 @@ async def update_evaluation(
         if evaluation.hora is not None:
             update_data["hora"] = evaluation.hora
         
+        # Store before state for logging
+        before_state = serialize_evaluation(existing)
+        
         # Eliminar campo "curso" si existe (migración)
         registro_evaluations_collection.update_one(
             {"_id": obj_id},
@@ -1203,10 +1330,21 @@ async def update_evaluation(
         )
         
         updated = registro_evaluations_collection.find_one({"_id": obj_id})
+        after_state = serialize_evaluation(updated)
+        
+        # Log the update
+        log_activity_action(
+            user_email=current_user["email"],
+            action="update",
+            entity="evaluation",
+            entity_id=evaluation_id,
+            before=before_state,
+            after=after_state
+        )
         
         return {
             "success": True,
-            "evaluation": serialize_evaluation(updated)
+            "evaluation": after_state
         }
     except HTTPException:
         raise
@@ -1232,10 +1370,27 @@ async def delete_evaluation(
         except:
             raise HTTPException(status_code=400, detail="Invalid evaluation ID")
         
+        # Store before state for logging (before deletion)
+        existing = registro_evaluations_collection.find_one({"_id": obj_id})
+        if not existing:
+            raise HTTPException(status_code=404, detail="Evaluation not found")
+        
+        before_state = serialize_evaluation(existing)
+        
         result = registro_evaluations_collection.delete_one({"_id": obj_id})
         
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Evaluation not found")
+        
+        # Log the deletion
+        log_activity_action(
+            user_email=current_user["email"],
+            action="delete",
+            entity="evaluation",
+            entity_id=evaluation_id,
+            before=before_state,
+            after=None
+        )
         
         return {
             "success": True,
@@ -1582,6 +1737,97 @@ async def test_email():
 async def root():
     return {"message": "Registro Escolar API - Sistema funcionando correctamente"}
 
+
+# ============================================
+# ACTIVITY LOGS (AUDIT) ENDPOINTS
+# ============================================
+
+@app.get("/api/activity-logs")
+async def get_activity_logs(
+    user: str | None = None,
+    action: str | None = None,
+    entity: str | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
+    seccion: str | None = None,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """
+    Get activity logs with filters (Editor only)
+    Filters: user, action (create/update/delete), entity (activity/evaluation), date range, seccion
+    """
+    try:
+        query = {}
+        
+        # Filter by user
+        if user:
+            query["user"] = user
+        
+        # Filter by action
+        if action:
+            if action not in ["create", "update", "delete"]:
+                raise HTTPException(status_code=400, detail="Invalid action. Must be create, update, or delete")
+            query["action"] = action
+        
+        # Filter by entity
+        if entity:
+            if entity not in ["activity", "evaluation"]:
+                raise HTTPException(status_code=400, detail="Invalid entity. Must be activity or evaluation")
+            query["entity"] = entity
+        
+        # Filter by date range (on timestamp)
+        if date_from or date_to:
+            timestamp_query = {}
+            if date_from:
+                timestamp_query["$gte"] = date_from + "T00:00:00"
+            if date_to:
+                timestamp_query["$lte"] = date_to + "T23:59:59"
+            query["timestamp"] = timestamp_query
+        
+        # Filter by seccion (extract from before/after data)
+        if seccion:
+            # This requires checking the before/after fields
+            # For simplicity, we'll filter in Python after fetching
+            pass
+        
+        # Fetch logs
+        logs = list(activity_logs_collection.find(query).sort("timestamp", -1).limit(1000))
+        
+        # Filter by seccion if needed (check before/after data)
+        if seccion:
+            filtered_logs = []
+            for log in logs:
+                # Check if seccion matches in before or after data
+                before_seccion = log.get("before", {}).get("seccion")
+                after_seccion = log.get("after", {}).get("seccion")
+                if before_seccion == seccion or after_seccion == seccion:
+                    filtered_logs.append(log)
+            logs = filtered_logs
+        
+        # Serialize logs (convert ObjectId to string)
+        serialized_logs = []
+        for log in logs:
+            serialized_log = {
+                "id": str(log["_id"]),
+                "timestamp": log.get("timestamp"),
+                "user": log.get("user"),
+                "action": log.get("action"),
+                "entity": log.get("entity"),
+                "entity_id": log.get("entity_id"),
+                "before": log.get("before"),
+                "after": log.get("after")
+            }
+            serialized_logs.append(serialized_log)
+        
+        return {
+            "success": True,
+            "logs": serialized_logs,
+            "count": len(serialized_logs)
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching activity logs: {str(e)}")
 
 @app.get("/api/users/check-status")
 async def check_users_status():

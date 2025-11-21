@@ -6,6 +6,7 @@ import RegistroEscolarApp from "./RegistroEscolarApp";
 import LoginPage from "./LoginPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminPage from "./pages/AdminPage";
+import ActivityLogPage from "./pages/ActivityLogPage";
 
 function App() {
   return (
@@ -19,6 +20,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={["editor"]}>
                   <AdminPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/actividad-log"
+              element={
+                <ProtectedRoute allowedRoles={["editor"]}>
+                  <ActivityLogPage />
                 </ProtectedRoute>
               }
             />

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import UserManagementPanel from './UserManagementPanel';
 import PrintReportPanel from './PrintReportPanel';
@@ -203,6 +204,7 @@ const Footer = ({ mode }) => (
 );
 
 const RegistroEscolarApp = () => {
+  const navigate = useNavigate();
   const { user, logout, isEditor, token } = useAuth();
   
   // State management
@@ -239,6 +241,9 @@ const RegistroEscolarApp = () => {
   const [filterCourse, setFilterCourse] = useState('ALL');
   const [filterType, setFilterType] = useState('ALL'); // ALL | ACTIVITIES | EVALUATIONS
   
+  // Expanded cards state - track which activity/evaluation cards are expanded
+  const [expandedCards, setExpandedCards] = useState(new Set()); // Set of card IDs that are expanded
+  
   // Dark mode state with localStorage persistence
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode');
@@ -257,6 +262,39 @@ const RegistroEscolarApp = () => {
 
   const toggleDarkMode = () => {
     setIsDarkMode(prev => !prev);
+  };
+  
+  // Toggle card expansion
+  const toggleCardExpansion = (cardId) => {
+    setExpandedCards(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(cardId)) {
+        newSet.delete(cardId);
+      } else {
+        newSet.clear(); // Close all other cards when opening a new one
+        newSet.add(cardId);
+      }
+      return newSet;
+    });
+  };
+  
+  // Helper function to check if a date is Sunday
+  // In JavaScript: getDay() returns 0 (Sunday) to 6 (Saturday)
+  const isSunday = (dateString) => {
+    if (!dateString) return false;
+    try {
+      const date = new Date(dateString + 'T12:00:00');
+      return date.getDay() === 0; // 0 = Sunday in JavaScript
+    } catch {
+      return false;
+    }
+  };
+  
+  // Helper function to disable Sundays in date input
+  const disableSunday = (dateString) => {
+    if (!dateString) return false;
+    const date = new Date(dateString + 'T12:00:00');
+    return date.getDay() === 0; // 0 = Sunday
   };
 
   // Helper function to convert date to YYYY-MM-DD format
@@ -312,40 +350,44 @@ const RegistroEscolarApp = () => {
   }, [token, user, loadActivities, loadEvaluations]);
 
   // Generate weeks - memoized to avoid recalculation on every render
+  // EXCLUDES SUNDAYS (weekday 6)
   const weeks = useMemo(() => {
     const weeksArray = [];
     let currentDate = new Date(schoolYearStart);
     let weekNumber = 0;
 
+    // Skip to Monday if start date is Sunday
+    while (currentDate <= schoolYearEnd && currentDate.getDay() === 6) {
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
     while (currentDate <= schoolYearEnd) {
       const weekDays = [];
       
-      // Collect days for this week (Monday to Saturday, plus Sunday if it follows)
+      // Collect days for this week (Monday to Saturday only, NO SUNDAYS)
       while (currentDate <= schoolYearEnd) {
         const dayOfWeek = currentDate.getDay();
         
-        // Add current day
+        // Skip Sundays (dayOfWeek === 6)
+        if (dayOfWeek === 6) {
+          currentDate.setDate(currentDate.getDate() + 1);
+          continue;
+        }
+        
+        // Add current day (Monday to Saturday only)
         weekDays.push(new Date(currentDate));
         
-        // If this is Saturday, check if we should add Sunday
-        if (dayOfWeek === 6) {
-          // Peek at the next day without modifying currentDate yet
-          const nextDate = new Date(currentDate);
-          nextDate.setDate(nextDate.getDate() + 1);
-          
-          // If next day is Sunday and within range, add it
-          if (nextDate <= schoolYearEnd && nextDate.getDay() === 0) {
-            weekDays.push(new Date(nextDate));
-            // Skip past Sunday when we continue
-            currentDate.setDate(currentDate.getDate() + 2);
-          } else {
-            // Just skip past Saturday
+        // If this is Saturday, end the week
+        if (dayOfWeek === 5) {
+          currentDate.setDate(currentDate.getDate() + 1);
+          // Skip Sunday
+          if (currentDate.getDay() === 6) {
             currentDate.setDate(currentDate.getDate() + 1);
           }
           break; // End of week
         }
         
-        // Move to next day (for non-Saturday days)
+        // Move to next day (for Monday-Friday)
         currentDate.setDate(currentDate.getDate() + 1);
       }
 
@@ -522,6 +564,18 @@ const RegistroEscolarApp = () => {
       return;
     }
 
+    // Validar que la fecha no sea domingo
+    if (activityForm.fecha && isSunday(activityForm.fecha)) {
+      alert('❌ No se permiten actividades en Domingo. Por favor seleccione otro día.');
+      return;
+    }
+    
+    // Validar fecha fin si existe
+    if (activityForm.fechaFin && isSunday(activityForm.fechaFin)) {
+      alert('❌ No se permiten actividades en Domingo. Por favor seleccione otra fecha de término.');
+      return;
+    }
+
     try {
       const startDate = new Date(activityForm.fecha);
       const endDate = activityForm.fechaFin ? new Date(activityForm.fechaFin) : startDate;
@@ -623,6 +677,12 @@ const RegistroEscolarApp = () => {
       return;
     }
 
+    // Validar que la fecha no sea domingo
+    if (evaluationForm.fecha && isSunday(evaluationForm.fecha)) {
+      alert('❌ No se permiten evaluaciones en Domingo. Por favor seleccione otro día.');
+      return;
+    }
+
     try {
       // Validar que se haya seleccionado al menos un curso
       if (!evaluationForm.cursos || evaluationForm.cursos.length === 0) {
@@ -720,6 +780,18 @@ const RegistroEscolarApp = () => {
     e.preventDefault();
     
     if (!editingActivity || !token || !isEditor) {
+      return;
+    }
+
+    // Validar que la fecha no sea domingo
+    if (activityForm.fecha && isSunday(activityForm.fecha)) {
+      alert('❌ No se permiten actividades en Domingo. Por favor seleccione otro día.');
+      return;
+    }
+    
+    // Validar fecha fin si existe
+    if (activityForm.fechaFin && isSunday(activityForm.fechaFin)) {
+      alert('❌ No se permiten actividades en Domingo. Por favor seleccione otra fecha de término.');
       return;
     }
 
@@ -839,6 +911,12 @@ const RegistroEscolarApp = () => {
       return;
     }
 
+    // Validar que la fecha no sea domingo
+    if (evaluationForm.fecha && isSunday(evaluationForm.fecha)) {
+      alert('❌ No se permiten evaluaciones en Domingo. Por favor seleccione otro día.');
+      return;
+    }
+
     // Validar que se haya seleccionado al menos un curso
     if (!evaluationForm.cursos || evaluationForm.cursos.length === 0) {
       alert('Por favor seleccione al menos un curso');
@@ -937,86 +1015,160 @@ const RegistroEscolarApp = () => {
   };
 
   const renderActivity = (activity, dateKey, section) => {
-    const text = activity.hora === 'TODO EL DIA' 
-      ? `[TODO EL DÍA] ${activity.actividad}`
-      : `[${activity.hora}] ${activity.actividad}`;
+    const cardId = `activity-${activity.id}`;
+    const isExpanded = expandedCards.has(cardId);
+    const isViewer = !isEditor;
     
     // Get curso display text - support both cursos array and legacy curso field
     let cursoText = null;
     if (activity.cursos && Array.isArray(activity.cursos) && activity.cursos.length > 0) {
-      // If it's a single course, show it. If multiple, show first one or join them
       if (activity.cursos.length === 1) {
         cursoText = activity.cursos[0];
       } else {
-        // Multiple courses - show first one (or could show "Varios cursos")
         cursoText = activity.cursos[0];
       }
     } else if (activity.curso) {
-      // Legacy support for single curso field
       cursoText = activity.curso;
     }
     
-    // Unified styling for both Editor and Viewer
-    const isViewer = !isEditor;
+    // Collapsed view: compact single line
+    const horaText = activity.hora === 'TODO EL DIA' ? '[TODO EL DÍA]' : `[${activity.hora}]`;
+    const collapsedText = `${horaText} ${activity.actividad}`;
     
     return (
       <div 
         key={activity.id} 
-        className="text-[10px] sm:text-xs mb-2 group transition-all duration-200 hover:scale-[1.02] sm:hover:scale-[1.03]"
+        className="mb-1.5 w-full max-w-full"
       >
-        <div className={`rounded-lg sm:rounded-[12px] px-2 sm:px-3 py-2 sm:py-2.5 shadow-[0px_2px_6px_rgba(0,0,0,0.12)] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.18)] transition-all duration-200 ${
-          activity.importante 
-            ? 'bg-[#fff3f4] dark:bg-[#2a1a1c] border-[#C5203A] border-[3px] shadow-[0_0_8px_rgba(197,32,58,0.3)] hover:border-[#C5203A] hover:shadow-[0_0_12px_rgba(197,32,58,0.4)]'
-            : 'bg-[#1A2346] dark:bg-[#121C39] border-transparent border-0 hover:border-[#1A2346] hover:border-opacity-30 dark:hover:border-[#C5203A] dark:hover:border-opacity-30'
-        }`}>
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              {/* Course chip - unified for both Editor and Viewer */}
-              {cursoText && (
-                <div className="mb-1 sm:mb-1.5">
-                  <span className="inline-block px-1.5 sm:px-2 py-0.5 rounded sm:rounded-[8px] text-[9px] sm:text-[10px] font-medium bg-[#2A3A5C] dark:bg-[#1E2A4A] text-white break-words">
-                    {cursoText}
-                  </span>
+        <div 
+          onClick={(e) => {
+            // Don't expand if clicking edit/delete buttons
+            if (e.target.closest('button')) return;
+            toggleCardExpansion(cardId);
+          }}
+          className={`cursor-pointer rounded-md shadow-[0px_2px_4px_rgba(0,0,0,0.1)] transition-all duration-200 ease-in-out overflow-hidden ${
+            activity.importante 
+              ? 'bg-[#fff3f4] dark:bg-[#2a1a1c] border-[#C5203A] border-2'
+              : 'bg-[#1A2346] dark:bg-[#121C39] border-transparent border'
+          } ${isExpanded ? 'max-h-none' : 'max-h-9 h-9'}`}
+        >
+          <div className={`transition-all duration-200 ease-in-out ${isExpanded ? 'p-2' : 'px-2 py-1'}`}>
+            {/* Collapsed view */}
+            {!isExpanded && (
+              <div className="flex items-center justify-between gap-2 h-full">
+                <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden">
+                  {/* Course chip - small in collapsed */}
+                  {cursoText && (
+                    <span className="inline-block px-1 py-0.5 rounded text-[9px] font-medium bg-[#2A3A5C] dark:bg-[#1E2A4A] text-white whitespace-nowrap flex-shrink-0">
+                      {cursoText}
+                    </span>
+                  )}
+                  <div className={`truncate text-[11px] ${activity.importante ? 'text-[#C5203A] dark:text-[#ff6b7a] font-bold' : 'text-white'}`}>
+                    {collapsedText}
+                  </div>
                 </div>
-              )}
-              <div className={`${activity.importante ? 'text-[#C5203A] dark:text-[#ff6b7a] font-bold' : isViewer ? 'text-white' : 'text-white'}`}>
-                {text}
+                {isEditor && (
+                  <div className="flex space-x-1 flex-shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditActivity(activity, dateKey, section);
+                      }}
+                      className={`text-[10px] rounded px-1 py-0.5 ${
+                        activity.importante 
+                          ? 'text-[#C5203A] bg-[#C5203A] bg-opacity-10' 
+                          : 'text-white bg-white bg-opacity-20'
+                      }`}
+                      title="Editar"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteActivity(activity.id, dateKey, section);
+                      }}
+                      className={`text-[10px] rounded px-1 py-0.5 ${
+                        activity.importante 
+                          ? 'text-[#C5203A] bg-[#C5203A] bg-opacity-10' 
+                          : 'text-white bg-white bg-opacity-20'
+                      }`}
+                      title="Eliminar"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                )}
               </div>
-              {activity.lugar && (
-                <div className={`text-xs mt-0.5 ${activity.importante ? 'text-[#C5203A] dark:text-[#ff6b7a]' : 'text-white opacity-90'}`}>
-                  ({activity.lugar})
+            )}
+            
+            {/* Expanded view */}
+            {isExpanded && (
+              <div className="space-y-1.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    {/* Course chip */}
+                    {cursoText && (
+                      <div className="mb-1">
+                        <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#2A3A5C] dark:bg-[#1E2A4A] text-white">
+                          {cursoText}
+                        </span>
+                      </div>
+                    )}
+                    {/* Hora */}
+                    <div className={`text-xs font-medium mb-0.5 ${activity.importante ? 'text-[#C5203A] dark:text-[#ff6b7a]' : 'text-white'}`}>
+                      {horaText}
+                    </div>
+                    {/* Actividad */}
+                    <div className={`text-xs ${activity.importante ? 'text-[#C5203A] dark:text-[#ff6b7a] font-bold' : 'text-white'}`}>
+                      {activity.actividad}
+                    </div>
+                    {/* Lugar */}
+                    {activity.lugar && (
+                      <div className={`text-[10px] mt-1 ${activity.importante ? 'text-[#C5203A] dark:text-[#ff6b7a]' : 'text-white opacity-90'}`}>
+                        📍 {activity.lugar}
+                      </div>
+                    )}
+                    {/* Responsable */}
+                    {activity.responsable && (
+                      <div className={`text-[10px] mt-1 ${activity.importante ? 'text-[#C5203A] dark:text-[#ff6b7a]' : 'text-white opacity-90'}`}>
+                        👤 {activity.responsable}
+                      </div>
+                    )}
+                  </div>
+                  {isEditor && (
+                    <div className="flex space-x-1 flex-shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditActivity(activity, dateKey, section);
+                        }}
+                        className={`text-xs rounded px-1.5 py-0.5 ${
+                          activity.importante 
+                            ? 'text-[#C5203A] bg-[#C5203A] bg-opacity-10 hover:bg-opacity-20' 
+                            : 'text-white bg-white bg-opacity-20 hover:bg-opacity-30'
+                        }`}
+                        title="Editar actividad"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteActivity(activity.id, dateKey, section);
+                        }}
+                        className={`text-xs rounded px-1.5 py-0.5 ${
+                          activity.importante 
+                            ? 'text-[#C5203A] bg-[#C5203A] bg-opacity-10 hover:bg-opacity-20' 
+                            : 'text-white bg-white bg-opacity-20 hover:bg-opacity-30'
+                        }`}
+                        title="Eliminar actividad"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
-              {activity.responsable && (
-                <div className={`text-xs mt-0.5 ${activity.importante ? 'text-[#C5203A] dark:text-[#ff6b7a]' : 'text-white opacity-90'}`}>
-                  {activity.responsable}
-                </div>
-              )}
-            </div>
-            {isEditor && (
-              <div className="opacity-0 sm:group-hover:opacity-100 ml-1 sm:ml-2 flex space-x-1 flex-shrink-0 transition-opacity">
-                <button
-                  onClick={() => handleEditActivity(activity, dateKey, section)}
-                  className={`text-[10px] sm:text-xs rounded px-1 py-0.5 ${
-                    activity.importante 
-                      ? 'text-[#C5203A] hover:text-[#A01A2E] bg-[#C5203A] bg-opacity-10 hover:bg-opacity-20' 
-                      : 'text-white hover:text-gray-200 bg-white bg-opacity-20 hover:bg-opacity-30'
-                  }`}
-                  title="Editar actividad"
-                >
-                  ✏️
-                </button>
-                <button
-                  onClick={() => handleDeleteActivity(activity.id, dateKey, section)}
-                  className={`text-xs rounded px-1 py-0.5 ${
-                    activity.importante 
-                      ? 'text-[#C5203A] hover:text-[#A01A2E] bg-[#C5203A] bg-opacity-10 hover:bg-opacity-20' 
-                      : 'text-white hover:text-red-200 bg-white bg-opacity-20 hover:bg-opacity-30'
-                  }`}
-                  title="Eliminar actividad"
-                >
-                  🗑️
-                </button>
               </div>
             )}
           </div>
@@ -1026,49 +1178,126 @@ const RegistroEscolarApp = () => {
   };
 
   const renderEvaluation = (evaluation, dateKey, section) => {
-    const horaText = evaluation.hora ? `[${evaluation.hora}] ` : '';
-    const temaText = evaluation.tema ? ` — ${evaluation.tema}` : '';
+    const cardId = `evaluation-${evaluation.id}`;
+    const isExpanded = expandedCards.has(cardId);
     
-    // Obtener asignatura (mostrar asignaturaManual si es "Otra")
+    const horaText = evaluation.hora ? `[${evaluation.hora}]` : '';
     const asignaturaDisplay = evaluation.asignatura === "Otra"
       ? (evaluation.asignaturaManual || "Otra")
       : evaluation.asignatura;
     
-    // Obtener cursos (soporta tanto array como string para backward compatibility)
     const cursosArray = evaluation.cursos || (evaluation.curso ? [evaluation.curso] : []);
     const cursosDisplay = formatCursosForDisplay(cursosArray);
     
+    // Collapsed view text
+    const collapsedText = `${horaText} ${asignaturaDisplay}${evaluation.tema ? ' — ' + evaluation.tema : ''}`;
+    
     return (
-      <div key={evaluation.id} className="text-[10px] sm:text-xs mb-2 group transition-all duration-200 hover:scale-[1.02] sm:hover:scale-[1.03]">
-        <div className="bg-[#C5203A] dark:bg-[#C5203A] text-white px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-[12px] shadow-[0px_2px_6px_rgba(0,0,0,0.12)] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.18)] hover:border-[#C5203A] hover:border-opacity-40 transition-all duration-200">
-          <div className="flex justify-between items-start">
-            <div className="flex-1 text-white">
-              {/* Course chip - unified for both Editor and Viewer */}
-              {cursosDisplay && (
-                <div className="mb-1 sm:mb-1.5">
-                  <span className="inline-block px-1.5 sm:px-2 py-0.5 rounded sm:rounded-[8px] text-[9px] sm:text-[10px] font-medium bg-[#2A3A5C] dark:bg-[#1E2A4A] text-white break-words">
-                    {cursosDisplay}
-                  </span>
+      <div key={evaluation.id} className="mb-1.5 w-full max-w-full">
+        <div 
+          onClick={(e) => {
+            if (e.target.closest('button')) return;
+            toggleCardExpansion(cardId);
+          }}
+          className={`cursor-pointer bg-[#C5203A] dark:bg-[#C5203A] text-white rounded-md shadow-[0px_2px_4px_rgba(0,0,0,0.1)] transition-all duration-200 ease-in-out overflow-hidden ${isExpanded ? 'max-h-none' : 'max-h-9 h-9'}`}
+        >
+          <div className={`transition-all duration-200 ease-in-out ${isExpanded ? 'p-2' : 'px-2 py-1'}`}>
+            {/* Collapsed view */}
+            {!isExpanded && (
+              <div className="flex items-center justify-between gap-2 h-full">
+                <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden">
+                  {/* Course chip */}
+                  {cursosDisplay && (
+                    <span className="inline-block px-1 py-0.5 rounded text-[9px] font-medium bg-[#2A3A5C] dark:bg-[#1E2A4A] text-white whitespace-nowrap flex-shrink-0">
+                      {cursosDisplay}
+                    </span>
+                  )}
+                  <div className="truncate text-[11px] text-white">
+                    {collapsedText}
+                  </div>
                 </div>
-              )}
-              {horaText}{asignaturaDisplay}{temaText}
-            </div>
-            {isEditor && (
-              <div className="opacity-0 sm:group-hover:opacity-100 ml-1 sm:ml-2 flex space-x-1 flex-shrink-0 transition-opacity">
-                <button
-                  onClick={() => handleEditEvaluation(evaluation, evaluation.fecha, section)}
-                  className="text-white hover:text-gray-200 text-[10px] sm:text-xs bg-white bg-opacity-20 hover:bg-opacity-30 rounded px-1 py-0.5"
-                  title="Editar evaluación"
-                >
-                  ✏️
-                </button>
-                <button
-                  onClick={() => handleDeleteEvaluation(evaluation.id, evaluation.fecha, section)}
-                  className="text-white hover:text-red-200 text-[10px] sm:text-xs bg-white bg-opacity-20 hover:bg-opacity-30 rounded px-1 py-0.5"
-                  title="Eliminar evaluación"
-                >
-                  🗑️
-                </button>
+                {isEditor && (
+                  <div className="flex space-x-1 flex-shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditEvaluation(evaluation, evaluation.fecha, section);
+                      }}
+                      className="text-[10px] text-white bg-white bg-opacity-20 rounded px-1 py-0.5"
+                      title="Editar"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteEvaluation(evaluation.id, evaluation.fecha, section);
+                      }}
+                      className="text-[10px] text-white bg-white bg-opacity-20 rounded px-1 py-0.5"
+                      title="Eliminar"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Expanded view */}
+            {isExpanded && (
+              <div className="space-y-1.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    {/* Course chip */}
+                    {cursosDisplay && (
+                      <div className="mb-1">
+                        <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#2A3A5C] dark:bg-[#1E2A4A] text-white">
+                          {cursosDisplay}
+                        </span>
+                      </div>
+                    )}
+                    {/* Hora */}
+                    {horaText && (
+                      <div className="text-xs font-medium mb-0.5 text-white">
+                        {horaText}
+                      </div>
+                    )}
+                    {/* Asignatura */}
+                    <div className="text-xs font-medium text-white">
+                      {asignaturaDisplay}
+                    </div>
+                    {/* Tema */}
+                    {evaluation.tema && (
+                      <div className="text-[10px] mt-1 text-white opacity-90">
+                        📝 {evaluation.tema}
+                      </div>
+                    )}
+                  </div>
+                  {isEditor && (
+                    <div className="flex space-x-1 flex-shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditEvaluation(evaluation, evaluation.fecha, section);
+                        }}
+                        className="text-xs text-white bg-white bg-opacity-20 hover:bg-opacity-30 rounded px-1.5 py-0.5"
+                        title="Editar evaluación"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteEvaluation(evaluation.id, evaluation.fecha, section);
+                        }}
+                        className="text-xs text-white bg-white bg-opacity-20 hover:bg-opacity-30 rounded px-1.5 py-0.5"
+                        title="Eliminar evaluación"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -1140,6 +1369,14 @@ const RegistroEscolarApp = () => {
                 >
                   <span className="hidden sm:inline">Imprimir</span>
                   <span className="sm:hidden">📄</span>
+                </button>
+                <button
+                  onClick={() => navigate('/actividad-log')}
+                  className="bg-[#1A2346] dark:bg-[#1A2346] text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-[12px] hover:bg-[#121C39] dark:hover:bg-[#121C39] text-xs sm:text-sm font-medium shadow-[0px_2px_6px_rgba(0,0,0,0.12)] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.18)] transition-all duration-200 whitespace-nowrap"
+                  title="Gestión de Actividad (Auditoría)"
+                >
+                  <span className="hidden md:inline">Auditoría</span>
+                  <span className="md:hidden">📋</span>
                 </button>
                 <button
                   onClick={() => setShowUserManagement(true)}
@@ -1249,7 +1486,15 @@ const RegistroEscolarApp = () => {
                     <input
                       type="date"
                       value={activityForm.fecha}
-                      onChange={(e) => setActivityForm({...activityForm, fecha: e.target.value})}
+                      onChange={(e) => {
+                        const selectedDate = e.target.value;
+                        if (selectedDate && isSunday(selectedDate)) {
+                          alert('❌ No se permiten actividades en Domingo. Por favor seleccione otro día.');
+                          e.target.value = activityForm.fecha; // Restore previous value
+                          return;
+                        }
+                        setActivityForm({...activityForm, fecha: selectedDate});
+                      }}
                       className="w-full max-w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150 text-sm"
                       min="2026-02-23"
                       max="2027-01-05"
@@ -1327,7 +1572,15 @@ const RegistroEscolarApp = () => {
                       <input
                         type="date"
                         value={activityForm.fechaFin}
-                        onChange={(e) => setActivityForm({...activityForm, fechaFin: e.target.value})}
+                        onChange={(e) => {
+                          const selectedDate = e.target.value;
+                          if (selectedDate && isSunday(selectedDate)) {
+                            alert('❌ No se permiten actividades en Domingo. Por favor seleccione otra fecha de término.');
+                            e.target.value = activityForm.fechaFin; // Restore previous value
+                            return;
+                          }
+                          setActivityForm({...activityForm, fechaFin: selectedDate});
+                        }}
                         className="w-full max-w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150 text-sm"
                         min={activityForm.fecha || "2026-02-23"}
                         max="2027-01-05"
@@ -1532,7 +1785,15 @@ const RegistroEscolarApp = () => {
                   <input
                     type="date"
                     value={evaluationForm.fecha}
-                    onChange={(e) => setEvaluationForm({...evaluationForm, fecha: e.target.value})}
+                    onChange={(e) => {
+                      const selectedDate = e.target.value;
+                      if (selectedDate && isSunday(selectedDate)) {
+                        alert('❌ No se permiten evaluaciones en Domingo. Por favor seleccione otro día.');
+                        e.target.value = evaluationForm.fecha; // Restore previous value
+                        return;
+                      }
+                      setEvaluationForm({...evaluationForm, fecha: selectedDate});
+                    }}
                     className="w-full max-w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#C5203A] hover:border-[#C5203A] dark:hover:border-[#C5203A] transition-all duration-150 text-sm"
                     min="2026-02-23"
                     max="2027-01-05"
@@ -1693,20 +1954,17 @@ const RegistroEscolarApp = () => {
                   <tr className="bg-[#1A2346] dark:bg-[#121C39] text-white">
                     <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center min-w-12 text-xs font-semibold">SEMANA</th>
                     <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center min-w-20 text-xs font-semibold">FECHA</th>
-                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#C4E6D1] dark:bg-green-900 dark:bg-opacity-30 text-[#1e5d2e] dark:text-green-200 text-xs font-semibold" colSpan="2">JUNIOR SCHOOL</th>
-                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#F5E6A3] dark:bg-yellow-900 dark:bg-opacity-30 text-[#8b6914] dark:text-yellow-200 text-xs font-semibold" colSpan="3">MIDDLE SCHOOL</th>
-                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#F5C2D1] dark:bg-pink-900 dark:bg-opacity-30 text-[#8b1a3d] dark:text-pink-200 text-xs font-semibold" colSpan="3">SENIOR SCHOOL</th>
+                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#C4E6D1] dark:bg-green-900 dark:bg-opacity-30 text-[#1e5d2e] dark:text-green-200 text-xs font-semibold">JUNIOR SCHOOL</th>
+                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#F5E6A3] dark:bg-yellow-900 dark:bg-opacity-30 text-[#8b6914] dark:text-yellow-200 text-xs font-semibold" colSpan="2">MIDDLE SCHOOL</th>
+                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#F5C2D1] dark:bg-pink-900 dark:bg-opacity-30 text-[#8b1a3d] dark:text-pink-200 text-xs font-semibold" colSpan="2">SENIOR SCHOOL</th>
                   </tr>
                   <tr className="bg-[#1A2346] dark:bg-[#121C39] bg-opacity-95 text-white">
                     <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center text-xs font-medium">N°</th>
                     <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center text-xs font-medium">DÍA</th>
                     <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#C4E6D1] dark:bg-green-800 dark:bg-opacity-40 text-[#1e5d2e] dark:text-green-200 min-w-32 text-xs font-medium">ACTIVIDAD</th>
-                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#C4E6D1] dark:bg-green-800 dark:bg-opacity-40 text-[#1e5d2e] dark:text-green-200 min-w-20 text-xs font-medium">RESPONSABLE</th>
                     <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#F5E6A3] dark:bg-yellow-800 dark:bg-opacity-40 text-[#8b6914] dark:text-yellow-200 min-w-32 text-xs font-medium">ACTIVIDAD</th>
-                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#F5E6A3] dark:bg-yellow-800 dark:bg-opacity-40 text-[#8b6914] dark:text-yellow-200 min-w-20 text-xs font-medium">RESPONSABLE</th>
                     <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#F5E6A3] dark:bg-yellow-900 dark:bg-opacity-30 text-[#8b6914] dark:text-yellow-200 min-w-24 text-xs font-medium">EVALUACIONES</th>
                     <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#F5C2D1] dark:bg-pink-800 dark:bg-opacity-40 text-[#8b1a3d] dark:text-pink-200 min-w-32 text-xs font-medium">ACTIVIDAD</th>
-                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#F5C2D1] dark:bg-pink-800 dark:bg-opacity-40 text-[#8b1a3d] dark:text-pink-200 min-w-20 text-xs font-medium">RESPONSABLE</th>
                     <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#F5C2D1] dark:bg-pink-900 dark:bg-opacity-30 text-[#8b1a3d] dark:text-pink-200 min-w-24 text-xs font-medium">EVALUACIONES</th>
                   </tr>
                 </thead>
@@ -1743,36 +2001,18 @@ const RegistroEscolarApp = () => {
                             {formatDate(date)}
                           </td>
                           
-                          {/* Junior Activities & Responsible */}
+                          {/* Junior Activities */}
                           <td className={`border border-gray-300 dark:border-gray-600 p-2 align-top ${juniorBase}`}>
                             {sortActivitiesByTime(dayActivities.Junior || [])
                               .filter(activity => matchFiltersForActivity(activity, 'Junior'))
                               .map(activity => renderActivity(activity, dateKey, 'Junior'))}
                           </td>
-                          <td className={`border border-gray-300 dark:border-gray-600 p-2 align-top ${juniorBase}`}>
-                            {sortActivitiesByTime(dayActivities.Junior || [])
-                              .filter(activity => matchFiltersForActivity(activity, 'Junior'))
-                              .map(activity => (
-                                <div key={activity.id} className="text-xs mb-1 text-gray-700 dark:text-gray-300">
-                                  {activity.responsable}
-                                </div>
-                              ))}
-                          </td>
                           
-                          {/* Middle Activities & Responsible & Evaluations */}
+                          {/* Middle Activities & Evaluations */}
                           <td className={`border border-gray-300 dark:border-gray-600 p-2 align-top ${middleBase}`}>
                             {sortActivitiesByTime(dayActivities.Middle || [])
                               .filter(activity => matchFiltersForActivity(activity, 'Middle'))
                               .map(activity => renderActivity(activity, dateKey, 'Middle'))}
-                          </td>
-                          <td className={`border border-gray-300 dark:border-gray-600 p-2 align-top ${middleBase}`}>
-                            {sortActivitiesByTime(dayActivities.Middle || [])
-                              .filter(activity => matchFiltersForActivity(activity, 'Middle'))
-                              .map(activity => (
-                                <div key={activity.id} className="text-xs mb-1 text-gray-700 dark:text-gray-300">
-                                  {activity.responsable}
-                                </div>
-                              ))}
                           </td>
                           <td className={`border border-gray-300 dark:border-gray-600 p-2 align-top ${middleEval}`}>
                             {sortEvaluationsByYearLevel(dayEvaluations.Middle || [])
@@ -1780,20 +2020,11 @@ const RegistroEscolarApp = () => {
                               .map(evaluation => renderEvaluation(evaluation, dateKey, 'Middle'))}
                           </td>
                           
-                          {/* Senior Activities & Responsible & Evaluations */}
+                          {/* Senior Activities & Evaluations */}
                           <td className={`border border-gray-300 dark:border-gray-600 p-2 align-top ${seniorBase}`}>
                             {sortActivitiesByTime(dayActivities.Senior || [])
                               .filter(activity => matchFiltersForActivity(activity, 'Senior'))
                               .map(activity => renderActivity(activity, dateKey, 'Senior'))}
-                          </td>
-                          <td className={`border border-gray-300 dark:border-gray-600 p-2 align-top ${seniorBase}`}>
-                            {sortActivitiesByTime(dayActivities.Senior || [])
-                              .filter(activity => matchFiltersForActivity(activity, 'Senior'))
-                              .map(activity => (
-                                <div key={activity.id} className="text-xs mb-1 text-gray-700 dark:text-gray-300">
-                                  {activity.responsable}
-                                </div>
-                              ))}
                           </td>
                           <td className={`border border-gray-300 dark:border-gray-600 p-2 align-top ${seniorEval}`}>
                             {sortEvaluationsByYearLevel(dayEvaluations.Senior || [])

@@ -319,6 +319,17 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
     });
   };
 
+  // Helper function to check if a date is Sunday (getDay() returns 0 for Sunday)
+  const isSunday = (dateString) => {
+    if (!dateString) return false;
+    try {
+      const date = new Date(dateString + 'T12:00:00');
+      return date.getDay() === 0; // 0 = Sunday in JavaScript
+    } catch {
+      return false;
+    }
+  };
+
   const formatDateForDisplay = (dateString) => {
     const date = new Date(dateString + 'T00:00:00');
     const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -451,7 +462,10 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
     // Process Activities with inline styles
     const processActivitiesHTML = () => {
       const filteredActivities = filterDataByDateRange(activities, dateFrom, dateTo);
-      const sortedDates = Object.keys(filteredActivities).sort();
+      // Filter out Sundays from dates
+      const sortedDates = Object.keys(filteredActivities)
+        .filter(dateKey => !isSunday(dateKey))
+        .sort();
       const sectionsToShow = section === 'todas' ? ['Junior', 'Middle', 'Senior'] : [section];
 
       if (sortedDates.length === 0) return '';
@@ -543,7 +557,10 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
     // Process Evaluations with inline styles
     const processEvaluationsHTML = () => {
       const filteredEvaluations = filterDataByDateRange(evaluations, dateFrom, dateTo);
-      const sortedDates = Object.keys(filteredEvaluations).sort();
+      // Filter out Sundays from dates
+      const sortedDates = Object.keys(filteredEvaluations)
+        .filter(dateKey => !isSunday(dateKey))
+        .sort();
       const sectionsToShow = section === 'todas' ? ['Junior', 'Middle', 'Senior'] : [section];
 
       if (sortedDates.length === 0) return '';
