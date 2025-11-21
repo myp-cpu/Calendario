@@ -36,12 +36,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Root endpoint
+@app.get("/")
+async def root():
+    """
+    Root endpoint to verify FastAPI backend is running
+    """
+    return {
+        "status": "ok",
+        "message": "Backend FastAPI funcionando correctamente"
+    }
+
 # MongoDB connection
-# For production (Render), use MONGO_URI environment variable from MongoDB Atlas
-# For local development, defaults to localhost MongoDB if MONGO_URI is not set
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+# Use MONGO_URI environment variable from MongoDB Atlas
+# For production (Render), ensure MONGO_URI is set in environment variables
+MONGO_URI = os.getenv("MONGO_URI")
+if not MONGO_URI:
+    raise ValueError("MONGO_URI environment variable is required. Please set it in .env file or environment variables.")
+
+DB_NAME = os.getenv("DB_NAME", "registro_escolar_db")
 client = MongoClient(MONGO_URI)
-db = client[os.environ.get('DB_NAME', 'registro_escolar_db')]
+db = client[DB_NAME]
 
 # Collections
 users_collection = db['users']
@@ -1858,6 +1873,39 @@ async def check_users_status():
         return {
             "error": str(e),
             "message": "Error checking users collection"
+        }
+
+@app.get("/api/test-db")
+async def test_db_connection():
+    """
+    Test database connection and list collections
+    Useful for verifying MongoDB Atlas connection in Render
+    """
+    try:
+        # Test connection by listing collections
+        collections = db.list_collection_names()
+        
+        # Get database name
+        db_name = db.name
+        
+        # Get collection counts
+        collection_info = {}
+        for collection_name in collections:
+            collection = db[collection_name]
+            collection_info[collection_name] = collection.count_documents({})
+        
+        return {
+            "status": "ok",
+            "database_name": db_name,
+            "collections": collections,
+            "collection_info": collection_info,
+            "message": f"Successfully connected to MongoDB Atlas. Found {len(collections)} collection(s)."
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "message": "Failed to connect to MongoDB Atlas"
         }
 
 # Cleanup on shutdown
