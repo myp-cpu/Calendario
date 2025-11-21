@@ -4,4 +4,3 @@
   "installCommand": "cd frontend && npm install --legacy-peer-deps",
   "rootDirectory": "frontend"
 }
-

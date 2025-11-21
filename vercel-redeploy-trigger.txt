@@ -1,0 +1,4 @@
+This file triggers a redeploy in Vercel after fixing build dependencies.
+Created: 2025-11-21
+Purpose: Fix Vercel build errors related to date-fns and react-day-picker dependencies
+
