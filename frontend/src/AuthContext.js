@@ -1,100 +1,96 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { login as requestLogin, fetchCurrentUser } from "@/services/authService";
 
 const AuthContext = createContext();
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
+const TOKEN_KEY = "registro_token";
+const USER_KEY = "registro_user";
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error("useAuth must be used within AuthProvider");
   }
   return context;
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
+  const [user, setUser] = useState(() => {
+    const stored = localStorage.getItem(USER_KEY);
+    return stored ? JSON.parse(stored) : null;
+  });
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(localStorage.getItem('registro_token'));
+  const isLoggingInRef = React.useRef(false);
 
-  // Verify token on mount
+  const logout = () => {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    setToken(null);
+    setUser(null);
+  };
+
   useEffect(() => {
+    let isMounted = true;
+
     const verifyToken = async () => {
-      const storedToken = localStorage.getItem('registro_token');
-      if (!storedToken) {
+      if (!token) {
+        setUser(null);
+        localStorage.removeItem(USER_KEY);
         setLoading(false);
         return;
       }
 
+      setLoading(true);
       try {
-        const response = await fetch(`${BACKEND_URL}/api/auth/me`, {
-          headers: {
-            'Authorization': `Bearer ${storedToken}`
-          }
-        });
-
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-          setToken(storedToken);
-        } else {
-          // Token is invalid
-          localStorage.removeItem('registro_token');
+        const currentUser = await fetchCurrentUser(token);
+        if (!isMounted) return;
+        setUser(currentUser);
+        localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
+      } catch (error) {
+        console.error("Error verifying token:", error);
+        if (isMounted) {
+          localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(USER_KEY);
           setToken(null);
           setUser(null);
         }
-      } catch (error) {
-        console.error('Error verifying token:', error);
-        localStorage.removeItem('registro_token');
-        setToken(null);
-        setUser(null);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     verifyToken();
-  }, []);
 
-  const login = async (email) => {
+    return () => {
+      isMounted = false;
+    };
+  }, [token]);
+
+  const login = async ({ email }) => {
+    // Prevent concurrent login calls
+    if (isLoggingInRef.current) {
+      return { success: false, error: "Login already in progress" };
+    }
+
+    isLoggingInRef.current = true;
     try {
-      const formData = new FormData();
-      formData.append('email', email);
+      const data = await requestLogin({ email });
+      const { access_token, user: userData } = data;
 
-      const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
-        method: 'POST',
-        body: formData
-      });
+      localStorage.setItem(TOKEN_KEY, access_token);
+      localStorage.setItem(USER_KEY, JSON.stringify(userData));
+      setToken(access_token);
+      setUser(userData);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Login failed');
-      }
-
-      const data = await response.json();
-      
-      // Store token
-      localStorage.setItem('registro_token', data.access_token);
-      setToken(data.access_token);
-      
-      // Set user data
-      setUser({
-        email: data.email,
-        role: data.role,
-        is_active: true
-      });
-
-      return { success: true };
+      isLoggingInRef.current = false;
+      return { success: true, user: userData };
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error in AuthContext:", error);
+      isLoggingInRef.current = false;
       return { success: false, error: error.message };
     }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('registro_token');
-    setToken(null);
-    setUser(null);
   };
 
   const value = {
@@ -103,9 +99,10 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     logout,
-    isAuthenticated: !!user,
-    isEditor: user?.role === 'editor',
-    isViewer: user?.role === 'viewer'
+    isAuthenticated: Boolean(token && user),
+    role: user?.role ?? null,
+    isEditor: user?.role === "editor",
+    isViewer: user?.role === "viewer",
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

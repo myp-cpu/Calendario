@@ -27,8 +27,10 @@ next-env.d.ts
 
 # Production builds
 /build
+/dist
+frontend/build/
+frontend/dist/
 dist/
-dist
 
 # Environment files (comprehensive coverage)
 
@@ -48,9 +50,20 @@ dump.rdb
 
 # Python
 __pycache__/
-*pyc*
+*.py[cod]
+*$py.class
+*.so
+.Python
 venv/
 .venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+*.egg-info/
+dist/
+build/
+*.egg
 
 # Development tools
 chainlit.md
@@ -63,6 +76,13 @@ chainlit.md
 
 # Data and databases
 agenthub/agents/youtube/db
+
+# CSV files (test data)
+*.csv
+!**/.gitkeep
+
+# PDF files (generated reports)
+*.pdf
 
 # Archive files and large assets
 **/*.zip
@@ -81,3 +101,15 @@ android-sdk/ -e
 # Environment files
 *.env
 *.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# Secrets and credentials
+secrets/
+*.key
+*.pem
+*.cert
+*.crt

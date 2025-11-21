@@ -1,15 +1,37 @@
 import React from "react";
 import "@/App.css";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./AuthContext";
 import RegistroEscolarApp from "./RegistroEscolarApp";
+import LoginPage from "./LoginPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminPage from "./pages/AdminPage";
 
 function App() {
   return (
     <div className="App">
       <AuthProvider>
         <BrowserRouter>
-          <RegistroEscolarApp />
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute allowedRoles={["editor"]}>
+                  <AdminPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <RegistroEscolarApp />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </BrowserRouter>
       </AuthProvider>
     </div>
