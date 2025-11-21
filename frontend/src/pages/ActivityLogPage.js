@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { getActivityLogs } from '../services/activityLogService';
+import jsPDF from 'jspdf';
 
 const ActivityLogPage = () => {
+  const navigate = useNavigate();
   const { token, user, isEditor } = useAuth();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -64,40 +67,196 @@ const ActivityLogPage = () => {
     return actionData;
   };
 
-  // Export to CSV
-  const exportToCSV = () => {
+  // Export to PDF
+  const exportToPDF = () => {
     if (logs.length === 0) {
       alert('No hay logs para exportar');
       return;
     }
 
-    const headers = ['Timestamp', 'Usuario', 'Acción', 'Entidad', 'ID Entidad', 'Sección (Antes)', 'Sección (Después)'];
-    const rows = logs.map(log => {
-      const beforeSeccion = log.before?.seccion || '';
-      const afterSeccion = log.after?.seccion || '';
-      return [
-        formatTimestamp(log.timestamp),
-        log.user,
-        log.action,
-        log.entity,
-        log.entity_id,
-        beforeSeccion,
-        afterSeccion
-      ];
+    const pdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
     });
 
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-    ].join('\n');
+    // Colors (same as PrintReportPanel)
+    const redCorporate = [197, 32, 58]; // #C5203A
+    const white = [255, 255, 255];
+    const black = [0, 0, 0];
+    const grayLight = [245, 247, 250];
+    const grayDark = [107, 114, 128];
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `activity_logs_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+    // Helper to escape HTML
+    const escapeHtml = (text) => {
+      if (!text) return '';
+      return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    };
+
+    let yPos = 20;
+    const pageHeight = pdf.internal.pageSize.height;
+    const pageWidth = pdf.internal.pageSize.width;
+    const margin = 15;
+    const tableStartX = margin;
+    const tableWidth = pageWidth - (margin * 2);
+    const colWidths = {
+      timestamp: 32,
+      user: 32,
+      action: 20,
+      entity: 20,
+      entityId: 18,
+      before: 30,
+      after: 30
+    };
+
+    // Header
+    pdf.setFillColor(...redCorporate);
+    pdf.rect(0, 0, pageWidth, 15, 'F');
+    pdf.setTextColor(...white);
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Reporte de Auditoría - Gestión de Actividad', pageWidth / 2, 10, { align: 'center' });
+
+    // Report date
+    pdf.setTextColor(...black);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    const reportDate = new Date().toLocaleDateString('es-CL', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    pdf.text(`Fecha del reporte: ${reportDate}`, margin, 22);
+
+    yPos = 28;
+
+    // Filters applied
+    const activeFilters = [];
+    if (filters.user) activeFilters.push(`Usuario: ${filters.user}`);
+    if (filters.action) activeFilters.push(`Acción: ${filters.action}`);
+    if (filters.entity) activeFilters.push(`Entidad: ${filters.entity}`);
+    if (filters.dateFrom) activeFilters.push(`Desde: ${filters.dateFrom}`);
+    if (filters.dateTo) activeFilters.push(`Hasta: ${filters.dateTo}`);
+    if (filters.seccion) activeFilters.push(`Sección: ${filters.seccion}`);
+
+    if (activeFilters.length > 0) {
+      pdf.setFontSize(9);
+      pdf.text('Filtros aplicados:', margin, yPos);
+      yPos += 5;
+      activeFilters.forEach(filter => {
+        pdf.text(`  • ${filter}`, margin + 2, yPos);
+        yPos += 4;
+      });
+      yPos += 3;
+    }
+
+    // Table header
+    pdf.setFillColor(...redCorporate);
+    pdf.rect(tableStartX, yPos, tableWidth, 8, 'F');
+    pdf.setTextColor(...white);
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'bold');
+    
+    let xPos = tableStartX;
+    pdf.text('Timestamp', xPos + 2, yPos + 5);
+    xPos += colWidths.timestamp;
+    pdf.text('Usuario', xPos + 2, yPos + 5);
+    xPos += colWidths.user;
+    pdf.text('Acción', xPos + 2, yPos + 5);
+    xPos += colWidths.action;
+    pdf.text('Entidad', xPos + 2, yPos + 5);
+    xPos += colWidths.entity;
+    pdf.text('ID', xPos + 2, yPos + 5);
+    xPos += colWidths.entityId;
+    pdf.text('Antes', xPos + 2, yPos + 5);
+    xPos += colWidths.before;
+    pdf.text('Después', xPos + 2, yPos + 5);
+
+    yPos += 8;
+    const rowHeight = 6;
+
+    // Table rows
+    logs.forEach((log, index) => {
+      // Check if new page needed
+      if (yPos + rowHeight > pageHeight - margin) {
+        pdf.addPage();
+        yPos = margin;
+        // Redraw header on new page
+        pdf.setFillColor(...redCorporate);
+        pdf.rect(tableStartX, yPos, tableWidth, 8, 'F');
+        pdf.setTextColor(...white);
+        pdf.setFontSize(8);
+        pdf.setFont('helvetica', 'bold');
+        xPos = tableStartX;
+        pdf.text('Timestamp', xPos + 2, yPos + 5);
+        xPos += colWidths.timestamp;
+        pdf.text('Usuario', xPos + 2, yPos + 5);
+        xPos += colWidths.user;
+        pdf.text('Acción', xPos + 2, yPos + 5);
+        xPos += colWidths.action;
+        pdf.text('Entidad', xPos + 2, yPos + 5);
+        xPos += colWidths.entity;
+        pdf.text('ID', xPos + 2, yPos + 5);
+        xPos += colWidths.entityId;
+        pdf.text('Antes', xPos + 2, yPos + 5);
+        xPos += colWidths.before;
+        pdf.text('Después', xPos + 2, yPos + 5);
+        yPos += 8;
+      }
+
+      // Row background
+      if (index % 2 === 0) {
+        pdf.setFillColor(...grayLight);
+        pdf.rect(tableStartX, yPos, tableWidth, rowHeight, 'F');
+      }
+
+      // Row content
+      pdf.setTextColor(...black);
+      pdf.setFontSize(7);
+      pdf.setFont('helvetica', 'normal');
+
+      xPos = tableStartX;
+      pdf.text(formatTimestamp(log.timestamp).substring(0, 16), xPos + 1, yPos + 4, { maxWidth: colWidths.timestamp - 2 });
+      xPos += colWidths.timestamp;
+      pdf.text((log.user || '').substring(0, 20), xPos + 1, yPos + 4, { maxWidth: colWidths.user - 2 });
+      xPos += colWidths.user;
+      
+      const actionText = log.action === 'create' ? 'Crear' : log.action === 'update' ? 'Actualizar' : log.action === 'delete' ? 'Eliminar' : log.action;
+      pdf.text(actionText.substring(0, 12), xPos + 1, yPos + 4, { maxWidth: colWidths.action - 2 });
+      xPos += colWidths.action;
+      
+      const entityText = log.entity === 'activity' ? 'Actividad' : log.entity === 'evaluation' ? 'Evaluación' : log.entity;
+      pdf.text(entityText.substring(0, 12), xPos + 1, yPos + 4, { maxWidth: colWidths.entity - 2 });
+      xPos += colWidths.entity;
+      
+      pdf.text((log.entity_id || '').substring(0, 8), xPos + 1, yPos + 4, { maxWidth: colWidths.entityId - 2 });
+      xPos += colWidths.entityId;
+      
+      const beforeText = log.before?.seccion || (log.before?.actividad ? 'Act: ' + log.before.actividad.substring(0, 15) : '') || (log.before?.asignatura ? 'Asig: ' + log.before.asignatura : '') || '-';
+      pdf.text(String(beforeText).substring(0, 20), xPos + 1, yPos + 4, { maxWidth: colWidths.before - 2 });
+      xPos += colWidths.before;
+      
+      const afterText = log.after?.seccion || (log.after?.actividad ? 'Act: ' + log.after.actividad.substring(0, 15) : '') || (log.after?.asignatura ? 'Asig: ' + log.after.asignatura : '') || '-';
+      pdf.text(String(afterText).substring(0, 20), xPos + 1, yPos + 4, { maxWidth: colWidths.after - 2 });
+
+      yPos += rowHeight;
+    });
+
+    // Footer
+    const totalPages = pdf.internal.pages.length - 1;
+    for (let i = 1; i <= totalPages; i++) {
+      pdf.setPage(i);
+      pdf.setFontSize(8);
+      pdf.setTextColor(...grayDark);
+      pdf.text(`Página ${i} de ${totalPages}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      pdf.text(`Generado el ${dateStr}`, pageWidth / 2, pageHeight - 2, { align: 'center' });
+    }
+
+    // Save PDF
+    const fileName = `auditoria_${new Date().toISOString().split('T')[0]}.pdf`;
+    pdf.save(fileName);
   };
 
   if (!isEditor) {
@@ -117,19 +276,28 @@ const ActivityLogPage = () => {
         {/* Header */}
         <div className="bg-white dark:bg-[#121C39] rounded-lg shadow-md p-4 sm:p-6 mb-4 border border-gray-200 dark:border-gray-700">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-2">
-                📋 Gestión de Actividad (Auditoría)
-              </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Historial completo de todas las acciones realizadas en el sistema
-              </p>
+            <div className="flex items-center gap-3 flex-1">
+              <button
+                onClick={() => navigate('/')}
+                className="bg-[#1A2346] dark:bg-[#121C39] text-white px-3 py-2 rounded-lg hover:bg-[#121C39] dark:hover:bg-[#0F1425] text-sm font-medium shadow-sm hover:shadow-md transition-all whitespace-nowrap flex items-center gap-2"
+                title="Volver al calendario"
+              >
+                ⬅️ Volver al calendario
+              </button>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-2">
+                  📋 Gestión de Actividad (Auditoría)
+                </h1>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Historial completo de todas las acciones realizadas en el sistema
+                </p>
+              </div>
             </div>
             <button
-              onClick={exportToCSV}
+              onClick={exportToPDF}
               className="bg-[#1A2346] dark:bg-[#121C39] text-white px-4 py-2 rounded-lg hover:bg-[#121C39] dark:hover:bg-[#0F1425] text-sm font-medium shadow-sm hover:shadow-md transition-all whitespace-nowrap"
             >
-              📥 Exportar CSV
+              📄 Exportar PDF
             </button>
           </div>
         </div>

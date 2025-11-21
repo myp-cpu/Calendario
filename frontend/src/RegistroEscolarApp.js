@@ -431,55 +431,25 @@ const RegistroEscolarApp = () => {
     });
   };
 
-  // Sort evaluations by year level (5, 6, 7, 8 for Middle; I, II, III, IV for Senior)
-  const sortEvaluationsByYearLevel = (evaluations) => {
+  // Sort evaluations by time (hora) - same logic as activities
+  // Evaluations without hora go to the end
+  const sortEvaluationsByTime = (evaluations) => {
     if (!evaluations || evaluations.length === 0) return [];
     
     return [...evaluations].sort((a, b) => {
-      // Extract year level from curso (soporta tanto array como string)
-      const getYearLevel = (curso) => {
-        // Si es array, usar el primer curso
-        const cursoStr = Array.isArray(curso) ? (curso[0] || '') : curso;
-        
-        // For Middle: 5°, 6°, 7°, 8°
-        if (cursoStr.includes('5°')) return 5;
-        if (cursoStr.includes('6°')) return 6;
-        if (cursoStr.includes('7°')) return 7;
-        if (cursoStr.includes('8°')) return 8;
-        
-        // For Senior: I EM, II EM, III EM, IV EM
-        if (cursoStr.includes('I EM') && !cursoStr.includes('II EM') && !cursoStr.includes('III EM') && !cursoStr.includes('IV EM')) return 1;
-        if (cursoStr.includes('II EM') && !cursoStr.includes('III EM') && !cursoStr.includes('IV EM')) return 2;
-        if (cursoStr.includes('III EM') && !cursoStr.includes('IV EM')) return 3;
-        if (cursoStr.includes('IV EM')) return 4;
-        
-        // For Junior or other
-        return 0;
-      };
+      // Evaluations without hora go to the end
+      if (!a.hora && b.hora) return 1;
+      if (a.hora && !b.hora) return -1;
+      if (!a.hora && !b.hora) return 0;
       
-      // Obtener cursos (soporta tanto array como string para backward compatibility)
-      const cursosA = a.cursos || (a.curso ? [a.curso] : []);
-      const cursosB = b.cursos || (b.curso ? [b.curso] : []);
+      // Sort by time (convert HH:MM to comparable number)
+      const timeA = a.hora ? a.hora.split(':').map(Number) : [99, 99];
+      const timeB = b.hora ? b.hora.split(':').map(Number) : [99, 99];
       
-      const levelA = getYearLevel(cursosA.length > 0 ? cursosA[0] : '');
-      const levelB = getYearLevel(cursosB.length > 0 ? cursosB[0] : '');
+      const minutesA = timeA[0] * 60 + (timeA[1] || 0);
+      const minutesB = timeB[0] * 60 + (timeB[1] || 0);
       
-      // Sort by year level first
-      if (levelA !== levelB) {
-        return levelA - levelB;
-      }
-      
-      // If same year level, sort by section (A before B before AB)
-      const getSectionOrder = (cursos) => {
-        if (cursos.length === 0) return 4;
-        const cursoStr = Array.isArray(cursos) ? (cursos[0] || '') : cursos;
-        if (cursoStr.includes(' A') && !cursoStr.includes('AB')) return 1;
-        if (cursoStr.includes(' B')) return 2;
-        if (cursoStr.includes('AB')) return 3;
-        return 4;
-      };
-      
-      return getSectionOrder(cursosA) - getSectionOrder(cursosB);
+      return minutesA - minutesB;
     });
   };
 
@@ -1948,24 +1918,24 @@ const RegistroEscolarApp = () => {
               </div>
             </div>
             
-            <div className="overflow-x-auto -mx-3 sm:mx-0">
-              <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 text-xs [&_tbody_tr:not(:last-child)]:border-b [&_tbody_tr:not(:last-child)]:border-b-[rgba(0,0,0,0.06)]">
+            <div className="w-full max-w-full overflow-hidden -mx-3 sm:mx-0">
+              <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 text-xs [&_tbody_tr:not(:last-child)]:border-b [&_tbody_tr:not(:last-child)]:border-b-[rgba(0,0,0,0.06)]" style={{ tableLayout: 'fixed' }}>
                 <thead>
                   <tr className="bg-[#1A2346] dark:bg-[#121C39] text-white">
-                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center min-w-12 text-xs font-semibold">SEMANA</th>
-                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center min-w-20 text-xs font-semibold">FECHA</th>
-                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#C4E6D1] dark:bg-green-900 dark:bg-opacity-30 text-[#1e5d2e] dark:text-green-200 text-xs font-semibold">JUNIOR SCHOOL</th>
-                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#F5E6A3] dark:bg-yellow-900 dark:bg-opacity-30 text-[#8b6914] dark:text-yellow-200 text-xs font-semibold" colSpan="2">MIDDLE SCHOOL</th>
-                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#F5C2D1] dark:bg-pink-900 dark:bg-opacity-30 text-[#8b1a3d] dark:text-pink-200 text-xs font-semibold" colSpan="2">SENIOR SCHOOL</th>
+                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-1 sm:px-2 text-center text-xs font-semibold" style={{ width: '6%' }}>SEMANA</th>
+                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-1 sm:px-2 text-center text-xs font-semibold" style={{ width: '10%' }}>FECHA</th>
+                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-1 sm:px-2 text-center bg-[#C4E6D1] dark:bg-green-900 dark:bg-opacity-30 text-[#1e5d2e] dark:text-green-200 text-xs font-semibold" style={{ width: '18%' }}>JUNIOR SCHOOL</th>
+                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-1 sm:px-2 text-center bg-[#F5E6A3] dark:bg-yellow-900 dark:bg-opacity-30 text-[#8b6914] dark:text-yellow-200 text-xs font-semibold" colSpan="2" style={{ width: '33%' }}>MIDDLE SCHOOL</th>
+                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-1 sm:px-2 text-center bg-[#F5C2D1] dark:bg-pink-900 dark:bg-opacity-30 text-[#8b1a3d] dark:text-pink-200 text-xs font-semibold" colSpan="2" style={{ width: '33%' }}>SENIOR SCHOOL</th>
                   </tr>
                   <tr className="bg-[#1A2346] dark:bg-[#121C39] bg-opacity-95 text-white">
-                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center text-xs font-medium">N°</th>
-                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center text-xs font-medium">DÍA</th>
-                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#C4E6D1] dark:bg-green-800 dark:bg-opacity-40 text-[#1e5d2e] dark:text-green-200 min-w-32 text-xs font-medium">ACTIVIDAD</th>
-                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#F5E6A3] dark:bg-yellow-800 dark:bg-opacity-40 text-[#8b6914] dark:text-yellow-200 min-w-32 text-xs font-medium">ACTIVIDAD</th>
-                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#F5E6A3] dark:bg-yellow-900 dark:bg-opacity-30 text-[#8b6914] dark:text-yellow-200 min-w-24 text-xs font-medium">EVALUACIONES</th>
-                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#F5C2D1] dark:bg-pink-800 dark:bg-opacity-40 text-[#8b1a3d] dark:text-pink-200 min-w-32 text-xs font-medium">ACTIVIDAD</th>
-                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-2 text-center bg-[#F5C2D1] dark:bg-pink-900 dark:bg-opacity-30 text-[#8b1a3d] dark:text-pink-200 min-w-24 text-xs font-medium">EVALUACIONES</th>
+                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-1 sm:px-2 text-center text-xs font-medium">N°</th>
+                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-1 sm:px-2 text-center text-xs font-medium">DÍA</th>
+                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-1 sm:px-2 text-center bg-[#C4E6D1] dark:bg-green-800 dark:bg-opacity-40 text-[#1e5d2e] dark:text-green-200 text-xs font-medium">ACTIVIDAD</th>
+                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-1 sm:px-2 text-center bg-[#F5E6A3] dark:bg-yellow-800 dark:bg-opacity-40 text-[#8b6914] dark:text-yellow-200 text-xs font-medium">ACTIVIDAD</th>
+                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-1 sm:px-2 text-center bg-[#F5E6A3] dark:bg-yellow-900 dark:bg-opacity-30 text-[#8b6914] dark:text-yellow-200 text-xs font-medium">EVALUACIONES</th>
+                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-1 sm:px-2 text-center bg-[#F5C2D1] dark:bg-pink-800 dark:bg-opacity-40 text-[#8b1a3d] dark:text-pink-200 text-xs font-medium">ACTIVIDAD</th>
+                    <th className="border border-gray-300 dark:border-gray-600 py-1.5 px-1 sm:px-2 text-center bg-[#F5C2D1] dark:bg-pink-900 dark:bg-opacity-30 text-[#8b1a3d] dark:text-pink-200 text-xs font-medium">EVALUACIONES</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2015,7 +1985,7 @@ const RegistroEscolarApp = () => {
                               .map(activity => renderActivity(activity, dateKey, 'Middle'))}
                           </td>
                           <td className={`border border-gray-300 dark:border-gray-600 p-2 align-top ${middleEval}`}>
-                            {sortEvaluationsByYearLevel(dayEvaluations.Middle || [])
+                            {sortEvaluationsByTime(dayEvaluations.Middle || [])
                               .filter(evaluation => matchFiltersForEvaluation(evaluation, 'Middle'))
                               .map(evaluation => renderEvaluation(evaluation, dateKey, 'Middle'))}
                           </td>
@@ -2027,7 +1997,7 @@ const RegistroEscolarApp = () => {
                               .map(activity => renderActivity(activity, dateKey, 'Senior'))}
                           </td>
                           <td className={`border border-gray-300 dark:border-gray-600 p-2 align-top ${seniorEval}`}>
-                            {sortEvaluationsByYearLevel(dayEvaluations.Senior || [])
+                            {sortEvaluationsByTime(dayEvaluations.Senior || [])
                               .filter(evaluation => matchFiltersForEvaluation(evaluation, 'Senior'))
                               .map(evaluation => renderEvaluation(evaluation, dateKey, 'Senior'))}
                           </td>
