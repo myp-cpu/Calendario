@@ -18,6 +18,11 @@ export const getActivityLogs = async (token, filters = {}) => {
     if (filters.dateTo) params.append('date_to', filters.dateTo);
     if (filters.seccion) params.append('seccion', filters.seccion);
     
+    if (!BACKEND_URL) {
+      throw new Error("La URL del backend no está configurada");
+    }
+
+    // BACKEND_URL should already include /api from REACT_APP_API_BASE_URL
     const queryString = params.toString();
     const url = `${BACKEND_URL}/activity-logs${queryString ? '?' + queryString : ''}`;
     

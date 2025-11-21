@@ -1956,6 +1956,12 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
       formData.append('dateTo', dateTo);
 
       // Send PDF file to backend
+      if (!BACKEND_URL) {
+        alert('❌ Error: La URL del backend no está configurada');
+        return;
+      }
+
+      // BACKEND_URL should already include /api from REACT_APP_API_BASE_URL
       const response = await fetch(`${BACKEND_URL}/send-report-email`, {
         method: 'POST',
         body: formData // Send as FormData, not JSON

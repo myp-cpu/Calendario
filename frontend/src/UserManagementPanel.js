@@ -18,6 +18,7 @@ const UserManagementPanel = ({ onClose }) => {
   // Load users
   const loadUsers = useCallback(async () => {
     try {
+      // BACKEND_URL should already include /api from REACT_APP_API_BASE_URL
       const response = await fetch(`${BACKEND_URL}/users`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -55,6 +56,7 @@ const UserManagementPanel = ({ onClose }) => {
       const formData = new FormData();
       formData.append('file', csvFile);
 
+      // BACKEND_URL should already include /api from REACT_APP_API_BASE_URL
       const response = await fetch(`${BACKEND_URL}/users/upload-csv`, {
         method: 'POST',
         headers: {
@@ -130,6 +132,7 @@ const UserManagementPanel = ({ onClose }) => {
       const formData = new FormData();
       formData.append('file', deleteCsvFile);
 
+      // BACKEND_URL should already include /api from REACT_APP_API_BASE_URL
       const response = await fetch(`${BACKEND_URL}/users/delete-csv`, {
         method: 'POST',
         headers: {
@@ -170,6 +173,7 @@ const UserManagementPanel = ({ onClose }) => {
     }
 
     try {
+      // BACKEND_URL should already include /api from REACT_APP_API_BASE_URL
       const response = await fetch(`${BACKEND_URL}/users/${encodeURIComponent(email)}`, {
         method: 'DELETE',
         headers: {
@@ -196,6 +200,7 @@ const UserManagementPanel = ({ onClose }) => {
 
   const handleSaveRole = async (email) => {
     try {
+      // BACKEND_URL should already include /api from REACT_APP_API_BASE_URL
       const response = await fetch(`${BACKEND_URL}/users/${encodeURIComponent(email)}/role`, {
         method: 'PATCH',
         headers: {
