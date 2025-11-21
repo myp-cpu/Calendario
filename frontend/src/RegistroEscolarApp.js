@@ -968,9 +968,9 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
     return (
       <div 
         key={activity.id} 
-        className="text-xs mb-2 group transition-all duration-200 hover:scale-[1.03]"
+        className="text-[10px] sm:text-xs mb-2 group transition-all duration-200 hover:scale-[1.02] sm:hover:scale-[1.03]"
       >
-        <div className={`rounded-[12px] px-3 py-2.5 shadow-[0px_2px_6px_rgba(0,0,0,0.12)] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.18)] transition-all duration-200 ${
+        <div className={`rounded-lg sm:rounded-[12px] px-2 sm:px-3 py-2 sm:py-2.5 shadow-[0px_2px_6px_rgba(0,0,0,0.12)] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.18)] transition-all duration-200 ${
           activity.importante 
             ? 'bg-[#fff3f4] dark:bg-[#2a1a1c] border-[#C5203A] border-[3px] shadow-[0_0_8px_rgba(197,32,58,0.3)] hover:border-[#C5203A] hover:shadow-[0_0_12px_rgba(197,32,58,0.4)]'
             : 'bg-[#1A2346] dark:bg-[#121C39] border-transparent border-0 hover:border-[#1A2346] hover:border-opacity-30 dark:hover:border-[#C5203A] dark:hover:border-opacity-30'
@@ -979,8 +979,8 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
             <div className="flex-1">
               {/* Course chip - unified for both Editor and Viewer */}
               {cursoText && (
-                <div className="mb-1.5">
-                  <span className="inline-block px-2 py-0.5 rounded-[8px] text-[10px] font-medium bg-[#2A3A5C] dark:bg-[#1E2A4A] text-white">
+                <div className="mb-1 sm:mb-1.5">
+                  <span className="inline-block px-1.5 sm:px-2 py-0.5 rounded sm:rounded-[8px] text-[9px] sm:text-[10px] font-medium bg-[#2A3A5C] dark:bg-[#1E2A4A] text-white break-words">
                     {cursoText}
                   </span>
                 </div>
@@ -1000,10 +1000,10 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
               )}
             </div>
             {isEditor && (
-              <div className="opacity-0 group-hover:opacity-100 ml-2 flex space-x-1 flex-shrink-0 transition-opacity">
+              <div className="opacity-0 sm:group-hover:opacity-100 ml-1 sm:ml-2 flex space-x-1 flex-shrink-0 transition-opacity">
                 <button
                   onClick={() => handleEditActivity(activity, dateKey, section)}
-                  className={`text-xs rounded px-1 py-0.5 ${
+                  className={`text-[10px] sm:text-xs rounded px-1 py-0.5 ${
                     activity.importante 
                       ? 'text-[#C5203A] hover:text-[#A01A2E] bg-[#C5203A] bg-opacity-10 hover:bg-opacity-20' 
                       : 'text-white hover:text-gray-200 bg-white bg-opacity-20 hover:bg-opacity-30'
@@ -1045,14 +1045,14 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
     const cursosDisplay = formatCursosForDisplay(cursosArray);
     
     return (
-      <div key={evaluation.id} className="text-xs mb-2 group transition-all duration-200 hover:scale-[1.03]">
-        <div className="bg-[#C5203A] dark:bg-[#C5203A] text-white px-3 py-2.5 rounded-[12px] shadow-[0px_2px_6px_rgba(0,0,0,0.12)] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.18)] hover:border-[#C5203A] hover:border-opacity-40 transition-all duration-200">
+      <div key={evaluation.id} className="text-[10px] sm:text-xs mb-2 group transition-all duration-200 hover:scale-[1.02] sm:hover:scale-[1.03]">
+        <div className="bg-[#C5203A] dark:bg-[#C5203A] text-white px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-[12px] shadow-[0px_2px_6px_rgba(0,0,0,0.12)] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.18)] hover:border-[#C5203A] hover:border-opacity-40 transition-all duration-200">
           <div className="flex justify-between items-start">
             <div className="flex-1 text-white">
               {/* Course chip - unified for both Editor and Viewer */}
               {cursosDisplay && (
-                <div className="mb-1.5">
-                  <span className="inline-block px-2 py-0.5 rounded-[8px] text-[10px] font-medium bg-[#2A3A5C] dark:bg-[#1E2A4A] text-white">
+                <div className="mb-1 sm:mb-1.5">
+                  <span className="inline-block px-1.5 sm:px-2 py-0.5 rounded sm:rounded-[8px] text-[9px] sm:text-[10px] font-medium bg-[#2A3A5C] dark:bg-[#1E2A4A] text-white break-words">
                     {cursosDisplay}
                   </span>
                 </div>
@@ -1060,17 +1060,17 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
               {horaText}{asignaturaDisplay}{temaText}
             </div>
             {isEditor && (
-              <div className="opacity-0 group-hover:opacity-100 ml-2 flex space-x-1 flex-shrink-0 transition-opacity">
+              <div className="opacity-0 sm:group-hover:opacity-100 ml-1 sm:ml-2 flex space-x-1 flex-shrink-0 transition-opacity">
                 <button
                   onClick={() => handleEditEvaluation(evaluation, evaluation.fecha, section)}
-                  className="text-white hover:text-gray-200 text-xs bg-white bg-opacity-20 hover:bg-opacity-30 rounded px-1 py-0.5"
+                  className="text-white hover:text-gray-200 text-[10px] sm:text-xs bg-white bg-opacity-20 hover:bg-opacity-30 rounded px-1 py-0.5"
                   title="Editar evaluación"
                 >
                   ✏️
                 </button>
                 <button
                   onClick={() => handleDeleteEvaluation(evaluation.id, evaluation.fecha, section)}
-                  className="text-white hover:text-red-200 text-xs bg-white bg-opacity-20 hover:bg-opacity-30 rounded px-1 py-0.5"
+                  className="text-white hover:text-red-200 text-[10px] sm:text-xs bg-white bg-opacity-20 hover:bg-opacity-30 rounded px-1 py-0.5"
                   title="Eliminar evaluación"
                 >
                   🗑️
@@ -1086,18 +1086,30 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
   return (
     <div className="bg-[#F5F7FA] dark:bg-[#0F1425] transition-colors duration-200 flex flex-col min-h-screen">
       {/* Header with user info and actions */}
-      <div className="bg-[#1A2346] dark:bg-[#121C39] border-b border-[#1A2346] dark:border-[#121C39] px-4 py-4 sticky top-0 z-10 shadow-md">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+      <div className="bg-[#1A2346] dark:bg-[#121C39] border-b border-[#1A2346] dark:border-[#121C39] px-3 sm:px-4 py-3 sm:py-4 sticky top-0 z-10 shadow-md">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto justify-between sm:justify-start">
             <img 
               src={LogoRedland} 
               alt="Logo Colegio" 
-              className="h-12 w-auto object-contain"
+              className="h-8 sm:h-10 md:h-12 w-auto object-contain"
             />
+            {/* Mobile user info */}
+            <div className="sm:hidden text-xs text-white">
+              <div className="font-medium truncate max-w-[120px]">{user?.email ?? ''}</div>
+              <span className={`inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded-full ${
+                user?.role === 'editor' 
+                  ? 'bg-[#C5203A] text-white' 
+                  : 'bg-white bg-opacity-20 text-white'
+              }`}>
+                {user?.role === 'editor' ? 'Editor' : 'Viewer'}
+              </span>
+            </div>
           </div>
           
-          <div className="flex items-center space-x-4">
-            <div className="text-sm text-white">
+          <div className="flex items-center flex-wrap gap-2 sm:gap-4 w-full sm:w-auto justify-end">
+            {/* Desktop user info */}
+            <div className="hidden sm:block text-sm text-white">
               <span className="font-medium">{user?.email ?? ''}</span>
               <span className={`ml-2 inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                 user?.role === 'editor' 
@@ -1129,16 +1141,18 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
               <>
                 <button
                   onClick={() => setShowPrintReport(true)}
-                  className="bg-[#1A2346] dark:bg-[#1A2346] text-white px-4 py-2.5 rounded-[12px] hover:bg-[#121C39] dark:hover:bg-[#121C39] text-sm font-medium shadow-[0px_2px_6px_rgba(0,0,0,0.12)] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.18)] transition-all duration-200"
+                  className="bg-[#1A2346] dark:bg-[#1A2346] text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-[12px] hover:bg-[#121C39] dark:hover:bg-[#121C39] text-xs sm:text-sm font-medium shadow-[0px_2px_6px_rgba(0,0,0,0.12)] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.18)] transition-all duration-200 whitespace-nowrap"
                   title="Imprimir Reporte"
                 >
-                  Imprimir
+                  <span className="hidden sm:inline">Imprimir</span>
+                  <span className="sm:hidden">📄</span>
                 </button>
                 <button
                   onClick={() => setShowUserManagement(true)}
-                  className="bg-[#1A2346] dark:bg-[#1A2346] text-white px-4 py-2.5 rounded-[12px] hover:bg-[#121C39] dark:hover:bg-[#121C39] text-sm font-medium shadow-[0px_2px_6px_rgba(0,0,0,0.12)] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.18)] transition-all duration-200"
+                  className="bg-[#1A2346] dark:bg-[#1A2346] text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-[12px] hover:bg-[#121C39] dark:hover:bg-[#121C39] text-xs sm:text-sm font-medium shadow-[0px_2px_6px_rgba(0,0,0,0.12)] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.18)] transition-all duration-200 whitespace-nowrap"
                 >
-                  Gestionar Usuarios
+                  <span className="hidden md:inline">Gestionar Usuarios</span>
+                  <span className="md:hidden">👥</span>
                 </button>
               </>
             )}
@@ -1156,14 +1170,14 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
         </div>
       </div>
 
-      <div className="main-content p-4 pb-0">
+      <div className="main-content p-3 sm:p-4 pb-0 flex-1">
         <div className="max-w-7xl mx-auto">
           {/* Header Info */}
-          <div className="bg-white dark:bg-[#121C39] rounded-[14px] shadow-[0px_2px_8px_rgba(0,0,0,0.08)] dark:shadow-lg p-6 mb-6 border border-gray-200 dark:border-gray-700 transition-colors duration-200">
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2 text-center">
+          <div className="bg-white dark:bg-[#121C39] rounded-lg sm:rounded-[14px] shadow-[0px_2px_8px_rgba(0,0,0,0.08)] dark:shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-2 text-center">
               Registro de Actividades y Evaluaciones Escolares 2026
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 text-center">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 text-center">
               Sistema completo para registrar y publicar actividades escolares por secciones
             </p>
             {!isEditor && (
@@ -1177,12 +1191,12 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
 
           {/* Activity Form - Only for editors */}
           {isEditor && (
-            <div className="bg-white dark:bg-[#121C39] rounded-[14px] shadow-[0px_2px_8px_rgba(0,0,0,0.08)] dark:shadow-lg p-5 mb-4 activity-form border border-gray-200 dark:border-gray-700 transition-colors duration-200">
-              <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4 text-center">Registro de Actividades</h2>
+            <div className="bg-white dark:bg-[#121C39] rounded-lg sm:rounded-[14px] shadow-[0px_2px_8px_rgba(0,0,0,0.08)] dark:shadow-lg p-4 sm:p-5 mb-4 activity-form border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+              <h2 className="text-base sm:text-lg font-bold text-gray-800 dark:text-white mb-3 sm:mb-4 text-center">Registro de Actividades</h2>
               <form onSubmit={editingActivity ? handleUpdateActivity : handleActivitySubmit} className="text-sm">
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
                   {/* Row 1: Main fields */}
-                  <div className="md:col-span-1">
+                  <div className="sm:col-span-2 lg:col-span-1">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sección</label>
                     <select
                       value={activityForm.seccion}
@@ -1191,7 +1205,7 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
                         // Reset curso when section changes
                         setCursoSeleccionado('');
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150 text-sm"
                       required
                     >
                       <option value="">Seleccionar</option>
@@ -1204,14 +1218,14 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
                   
                   {/* Curso selector - only shown when section is not "ALL" */}
                   {activityForm.seccion && activityForm.seccion !== 'ALL' && (
-                    <div className="md:col-span-1">
+                    <div className="sm:col-span-2 lg:col-span-1">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Curso
                       </label>
                       <select
                         value={cursoSeleccionado}
                         onChange={(e) => setCursoSeleccionado(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150 text-sm"
                       >
                         <option value="">Seleccionar</option>
                         <option value="ALL">Todos los cursos</option>
@@ -1222,19 +1236,19 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
                     </div>
                   )}
                   
-                  <div className="md:col-span-2">
+                  <div className="sm:col-span-2 lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Actividad</label>
                     <input
                       type="text"
                       value={activityForm.actividad}
                       onChange={(e) => setActivityForm({...activityForm, actividad: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150 text-sm"
                       placeholder="Descripción de la actividad"
                       required
                     />
                   </div>
                   
-                  <div className="md:col-span-2">
+                  <div className="sm:col-span-2 lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Fecha {activityForm.hora === 'TODO EL DIA' ? 'Inicio' : ''}
                     </label>
@@ -1242,19 +1256,19 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
                       type="date"
                       value={activityForm.fecha}
                       onChange={(e) => setActivityForm({...activityForm, fecha: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150 text-sm"
                       min="2026-02-23"
                       max="2027-01-05"
                       required
                     />
                   </div>
                   
-                  <div className="md:col-span-1">
+                  <div className="sm:col-span-2 lg:col-span-1">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hora</label>
                     <select
                       value={activityForm.hora}
                       onChange={(e) => setActivityForm({...activityForm, hora: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150 text-sm"
                     >
                       <option value="">Seleccionar</option>
                       <option value="TODO EL DIA">TODO EL DÍA</option>
@@ -1269,29 +1283,29 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
                     </select>
                   </div>
                   
-                  <div className="md:col-span-2">
+                  <div className="sm:col-span-2 lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lugar</label>
                     <input
                       type="text"
                       value={activityForm.lugar}
                       onChange={(e) => setActivityForm({...activityForm, lugar: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150 text-sm"
                       placeholder="Ubicación"
                     />
                   </div>
                   
-                  <div className="md:col-span-2">
+                  <div className="sm:col-span-2 lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Responsable</label>
                     <input
                       type="text"
                       value={activityForm.responsable}
                       onChange={(e) => setActivityForm({...activityForm, responsable: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150 text-sm"
                       placeholder="Nombre del responsable"
                     />
                   </div>
                   
-                  <div className="md:col-span-2 flex flex-col gap-2">
+                  <div className="sm:col-span-2 lg:col-span-2 flex flex-col gap-2">
                     <button
                       type="submit"
                       className="bg-[#1A2346] dark:bg-[#1A2346] text-white px-4 py-2.5 rounded-[12px] hover:bg-[#121C39] dark:hover:bg-[#121C39] focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] text-sm font-medium shadow-[0px_2px_6px_rgba(0,0,0,0.12)] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.18)] transition-all duration-200"
@@ -1346,9 +1360,9 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
 
           {/* Evaluation Form - Only for editors */}
           {isEditor && (
-            <div className="bg-white dark:bg-[#121C39] rounded-[14px] shadow-[0px_2px_8px_rgba(0,0,0,0.08)] dark:shadow-lg p-5 mb-4 evaluation-form border border-gray-200 dark:border-gray-700 transition-colors duration-200">
-              <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4 text-center">Registro de Evaluaciones</h2>
-              <form onSubmit={editingEvaluation ? handleUpdateEvaluation : handleEvaluationSubmit} className="grid grid-cols-1 md:grid-cols-7 gap-3 text-sm">
+            <div className="bg-white dark:bg-[#121C39] rounded-lg sm:rounded-[14px] shadow-[0px_2px_8px_rgba(0,0,0,0.08)] dark:shadow-lg p-4 sm:p-5 mb-4 evaluation-form border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+              <h2 className="text-base sm:text-lg font-bold text-gray-800 dark:text-white mb-3 sm:mb-4 text-center">Registro de Evaluaciones</h2>
+              <form onSubmit={editingEvaluation ? handleUpdateEvaluation : handleEvaluationSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3 text-sm">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sección</label>
                   <select
@@ -1437,11 +1451,11 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
                   />
                 </div>
                 
-                <div className="md:col-span-2">
+                <div className="sm:col-span-2 lg:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cursos</label>
-                  <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-[#1A1F2E]">
+                  <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-2 sm:p-3 bg-white dark:bg-[#1A1F2E]">
                     {evaluationForm.seccion === 'Middle' && (
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {getCoursesForSection('Middle').map(curso => (
                           <label key={curso} className="flex items-center text-sm text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-1 rounded">
                             <input
@@ -1474,7 +1488,7 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
                       </div>
                     )}
                     {evaluationForm.seccion === 'Senior' && (
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {getCoursesForSection('Senior').map(curso => (
                           <label key={curso} className="flex items-center text-sm text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-1 rounded">
                             <input
@@ -1576,9 +1590,9 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
           )}
 
           {/* Filters Bar */}
-          <div className="bg-white dark:bg-[#121C39] rounded-[14px] shadow-[0px_2px_8px_rgba(0,0,0,0.08)] dark:shadow-lg py-5 mb-4 border border-gray-200 dark:border-gray-700 transition-colors duration-200">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 text-center">Filtros del Calendario</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+          <div className="bg-white dark:bg-[#121C39] rounded-lg sm:rounded-[14px] shadow-[0px_2px_8px_rgba(0,0,0,0.08)] dark:shadow-lg p-4 sm:py-5 mb-4 border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-white mb-3 sm:mb-4 text-center">Filtros del Calendario</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 max-w-4xl mx-auto">
               {/* Section Filter */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -1653,31 +1667,33 @@ const RegistroEscolarApp = ({ autoOpenUserManagement = false }) => {
           )}
 
           {/* Calendar Display - Vista de 4 Semanas */}
-          <div className="bg-white dark:bg-[#121C39] rounded-[14px] shadow-[0px_2px_8px_rgba(0,0,0,0.08)] dark:shadow-lg p-5 border border-gray-200 dark:border-gray-700 transition-colors duration-200">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">Calendario Escolar 2026-2027 - Vista de 4 Semanas</h2>
-              <div className="flex items-center space-x-4">
+          <div className="bg-white dark:bg-[#121C39] rounded-lg sm:rounded-[14px] shadow-[0px_2px_8px_rgba(0,0,0,0.08)] dark:shadow-lg p-3 sm:p-5 border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4">
+              <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 dark:text-white">Calendario Escolar 2026-2027 - Vista de 4 Semanas</h2>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
                 <button
                   onClick={() => setCurrentWeek(Math.max(0, currentWeek - 4))}
                   disabled={currentWeek === 0}
-                  className="px-4 py-2 bg-[#1A2346] dark:bg-[#1A2346] text-white rounded-[12px] disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-[0px_2px_6px_rgba(0,0,0,0.12)] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.18)] hover:bg-[#121C39] dark:hover:bg-[#121C39] transition-all duration-200"
+                  className="px-3 sm:px-4 py-2 bg-[#1A2346] dark:bg-[#1A2346] text-white rounded-lg sm:rounded-[12px] disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm font-medium shadow-[0px_2px_6px_rgba(0,0,0,0.12)] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.18)] hover:bg-[#121C39] dark:hover:bg-[#121C39] transition-all duration-200 whitespace-nowrap"
                 >
-                  ← 4 Semanas Ant.
+                  <span className="hidden sm:inline">← 4 Semanas Ant.</span>
+                  <span className="sm:hidden">← Anterior</span>
                 </button>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 text-center py-2 sm:py-0 whitespace-nowrap">
                   Semanas {currentWeek} - {Math.min(currentWeek + 3, weeks.length - 1)}
                 </span>
                 <button
                   onClick={() => setCurrentWeek(Math.min(weeks.length - 4, currentWeek + 4))}
                   disabled={currentWeek >= weeks.length - 4}
-                  className="px-4 py-2 bg-[#1A2346] dark:bg-[#1A2346] text-white rounded-[12px] disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-[0px_2px_6px_rgba(0,0,0,0.12)] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.18)] hover:bg-[#121C39] dark:hover:bg-[#121C39] transition-all duration-200"
+                  className="px-3 sm:px-4 py-2 bg-[#1A2346] dark:bg-[#1A2346] text-white rounded-lg sm:rounded-[12px] disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm font-medium shadow-[0px_2px_6px_rgba(0,0,0,0.12)] hover:shadow-[0px_4px_12px_rgba(0,0,0,0.18)] hover:bg-[#121C39] dark:hover:bg-[#121C39] transition-all duration-200 whitespace-nowrap"
                 >
-                  4 Semanas Sig. →
+                  <span className="hidden sm:inline">4 Semanas Sig. →</span>
+                  <span className="sm:hidden">Siguiente →</span>
                 </button>
               </div>
             </div>
             
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto -mx-3 sm:mx-0">
               <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 text-xs [&_tbody_tr:not(:last-child)]:border-b [&_tbody_tr:not(:last-child)]:border-b-[rgba(0,0,0,0.06)]">
                 <thead>
                   <tr className="bg-[#1A2346] dark:bg-[#121C39] text-white">

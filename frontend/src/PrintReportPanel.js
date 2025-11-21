@@ -1960,11 +1960,11 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-70 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-[#1A1F2E] rounded-xl shadow-2xl w-full max-w-2xl border border-gray-200 dark:border-gray-700">
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-70 flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
+      <div className="bg-white dark:bg-[#1A1F2E] rounded-lg sm:rounded-xl shadow-2xl w-full max-w-2xl border border-gray-200 dark:border-gray-700 my-4 sm:my-0 max-h-[95vh] sm:max-h-auto overflow-y-auto flex flex-col">
         {/* Header */}
-        <div className="bg-[#1A2346] dark:bg-[#121C39] text-white px-6 py-4 flex justify-between items-center rounded-t-lg">
-          <h2 className="text-2xl font-bold">📄 Generar Reporte para Impresión</h2>
+        <div className="bg-[#1A2346] dark:bg-[#121C39] text-white px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center rounded-t-lg flex-shrink-0">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold">📄 Generar Reporte para Impresión</h2>
           <button
             onClick={onClose}
             className="text-white hover:text-gray-200 transition-colors"
@@ -1976,7 +1976,7 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6 flex-1 overflow-y-auto">
           <div className="space-y-6">
             {/* Report Type */}
             <div>
@@ -2035,7 +2035,7 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
             )}
 
             {/* Date Range */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Fecha Desde
@@ -2107,15 +2107,15 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
         </div>
 
         {/* Footer */}
-        <div className="bg-gray-50 dark:bg-[#0F1425] px-6 py-4 flex justify-between items-center rounded-b-lg border-t border-gray-200 dark:border-gray-700">
+        <div className="bg-gray-50 dark:bg-[#0F1425] px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-0 rounded-b-lg border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors shadow-sm"
+            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors shadow-sm text-sm sm:text-base order-2 sm:order-1"
           >
             Cancelar
           </button>
           
-          <div className="flex space-x-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:space-x-3 order-1 sm:order-2">
             {emailTo && (
               <button
                 onClick={handleSendEmail}
