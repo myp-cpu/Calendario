@@ -1242,7 +1242,7 @@ const RegistroEscolarApp = () => {
                     />
                   </div>
                   
-                  <div className="sm:col-span-2 lg:col-span-2">
+                  <div className="sm:col-span-2 lg:col-span-2 w-full max-w-full overflow-hidden">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Fecha {activityForm.hora === 'TODO EL DIA' ? 'Inicio' : ''}
                     </label>
@@ -1250,7 +1250,7 @@ const RegistroEscolarApp = () => {
                       type="date"
                       value={activityForm.fecha}
                       onChange={(e) => setActivityForm({...activityForm, fecha: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150 text-sm"
+                      className="w-full max-w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150 text-sm"
                       min="2026-02-23"
                       max="2027-01-05"
                       required
@@ -1322,13 +1322,13 @@ const RegistroEscolarApp = () => {
                 {/* Row 2: Conditional fields */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-3 mt-3">
                   {activityForm.hora === 'TODO EL DIA' && (
-                    <div className="md:col-span-2">
+                    <div className="md:col-span-2 w-full max-w-full overflow-hidden">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha Término</label>
                       <input
                         type="date"
                         value={activityForm.fechaFin}
                         onChange={(e) => setActivityForm({...activityForm, fechaFin: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150"
+                        className="w-full max-w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1A2346] dark:focus:ring-[#C5203A] hover:border-[#1A2346] dark:hover:border-[#C5203A] transition-all duration-150 text-sm"
                         min={activityForm.fecha || "2026-02-23"}
                         max="2027-01-05"
                         required={activityForm.hora === 'TODO EL DIA'}
@@ -1527,13 +1527,13 @@ const RegistroEscolarApp = () => {
                   )}
                 </div>
                 
-                <div>
+                <div className="w-full max-w-full overflow-hidden">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha</label>
                   <input
                     type="date"
                     value={evaluationForm.fecha}
                     onChange={(e) => setEvaluationForm({...evaluationForm, fecha: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#C5203A] hover:border-[#C5203A] dark:hover:border-[#C5203A] transition-all duration-150"
+                    className="w-full max-w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1A1F2E] text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#C5203A] hover:border-[#C5203A] dark:hover:border-[#C5203A] transition-all duration-150 text-sm"
                     min="2026-02-23"
                     max="2027-01-05"
                     required
