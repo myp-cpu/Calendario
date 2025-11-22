@@ -68,6 +68,48 @@ const ActivityLogPage = () => {
     return actionData;
   };
 
+  // Format user state for display (ANTES/DESPUÉS columns)
+  const formatUserState = (data, action, entity) => {
+    // Only format for user entities
+    if (entity !== 'user') return null;
+    
+    // If data is null and action is delete, show "Usuario eliminado"
+    if (data === null || data === undefined) {
+      if (action === 'delete') {
+        return 'Usuario eliminado';
+      }
+      return '—';
+    }
+    
+    // If action is create, before should be "—"
+    if (action === 'create' && data === null) {
+      return '—';
+    }
+    
+    // Format user data object
+    const parts = [];
+    if (data.email) parts.push(`Email: ${data.email}`);
+    if (data.role !== undefined) {
+      const roleLabel = data.role === 'editor' ? 'Editor' : data.role === 'viewer' ? 'Viewer' : data.role;
+      parts.push(`Rol: ${roleLabel}`);
+    }
+    if (data.is_active !== undefined) {
+      parts.push(`Activo: ${data.is_active ? 'Sí' : 'No'}`);
+    }
+    
+    return parts.length > 0 ? parts.join('\n') : '—';
+  };
+
+  // Format entity label for display
+  const formatEntityLabel = (entity) => {
+    const entityMap = {
+      'activity': 'Actividad',
+      'evaluation': 'Evaluación',
+      'user': 'Usuario'
+    };
+    return entityMap[entity] || entity;
+  };
+
   // Export to PDF with institutional format (same as PrintReportPanel)
   const exportToPDF = async () => {
     if (logs.length === 0) {
@@ -318,19 +360,33 @@ const ActivityLogPage = () => {
       pdf.text(actionText, xPos + 1, yPosition + 4.5, { maxWidth: colWidths.action - 2 });
       xPos += colWidths.action;
       
-      const entityText = log.entity === 'activity' ? 'Actividad' : log.entity === 'evaluation' ? 'Evaluación' : log.entity;
+      const entityText = log.entity === 'activity' ? 'Actividad' : log.entity === 'evaluation' ? 'Evaluación' : log.entity === 'user' ? 'Usuario' : log.entity;
       pdf.text(entityText, xPos + 1, yPosition + 4.5, { maxWidth: colWidths.entity - 2 });
       xPos += colWidths.entity;
       
       pdf.text((log.entity_id || '').substring(0, 10), xPos + 1, yPosition + 4.5, { maxWidth: colWidths.entityId - 2 });
       xPos += colWidths.entityId;
       
-      const beforeText = log.before?.seccion || (log.before?.actividad ? 'Act: ' + log.before.actividad.substring(0, 15) : '') || (log.before?.asignatura ? 'Asig: ' + log.before.asignatura : '') || '-';
-      pdf.text(String(beforeText).substring(0, 22), xPos + 1, yPosition + 4.5, { maxWidth: colWidths.before - 2 });
+      // Format BEFORE text based on entity type
+      let beforeText = '-';
+      if (log.entity === 'user') {
+        const userState = formatUserState(log.before, log.action, log.entity);
+        beforeText = userState || '-';
+      } else {
+        beforeText = log.before?.seccion || (log.before?.actividad ? 'Act: ' + log.before.actividad.substring(0, 15) : '') || (log.before?.asignatura ? 'Asig: ' + log.before.asignatura : '') || '-';
+      }
+      pdf.text(String(beforeText).substring(0, 25), xPos + 1, yPosition + 4.5, { maxWidth: colWidths.before - 2 });
       xPos += colWidths.before;
       
-      const afterText = log.after?.seccion || (log.after?.actividad ? 'Act: ' + log.after.actividad.substring(0, 15) : '') || (log.after?.asignatura ? 'Asig: ' + log.after.asignatura : '') || '-';
-      pdf.text(String(afterText).substring(0, 22), xPos + 1, yPosition + 4.5, { maxWidth: colWidths.after - 2 });
+      // Format AFTER text based on entity type
+      let afterText = '-';
+      if (log.entity === 'user') {
+        const userState = formatUserState(log.after, log.action, log.entity);
+        afterText = userState || '-';
+      } else {
+        afterText = log.after?.seccion || (log.after?.actividad ? 'Act: ' + log.after.actividad.substring(0, 15) : '') || (log.after?.asignatura ? 'Asig: ' + log.after.asignatura : '') || '-';
+      }
+      pdf.text(String(afterText).substring(0, 25), xPos + 1, yPosition + 4.5, { maxWidth: colWidths.after - 2 });
 
       yPosition += rowHeight;
     });
@@ -440,6 +496,7 @@ const ActivityLogPage = () => {
                 <option value="">Todas las entidades</option>
                 <option value="activity">Actividad</option>
                 <option value="evaluation">Evaluación</option>
+                <option value="user">Usuario</option>
               </select>
             </div>
 
@@ -554,13 +611,17 @@ const ActivityLogPage = () => {
                           </span>
                         </td>
                         <td className="px-3 sm:px-4 py-3 text-xs text-gray-900 dark:text-gray-200 capitalize">
-                          {log.entity === 'activity' ? 'Actividad' : 'Evaluación'}
+                          {formatEntityLabel(log.entity)}
                         </td>
                         <td className="px-3 sm:px-4 py-3 text-xs text-gray-600 dark:text-gray-400 font-mono">
                           {log.entity_id.substring(0, 8)}...
                         </td>
-                        <td className="px-3 sm:px-4 py-3 text-xs text-gray-600 dark:text-gray-400 max-w-[150px] truncate" title={JSON.stringify(log.before, null, 2)}>
-                          {log.before ? (
+                        <td className="px-3 sm:px-4 py-3 text-xs text-gray-600 dark:text-gray-400 max-w-[150px]" title={JSON.stringify(log.before, null, 2)}>
+                          {log.entity === 'user' ? (
+                            <div className="whitespace-pre-line space-y-0.5">
+                              {formatUserState(log.before, log.action, log.entity)}
+                            </div>
+                          ) : log.before ? (
                             <div className="space-y-0.5">
                               {log.before.seccion && <div>Sección: {log.before.seccion}</div>}
                               {log.before.actividad && <div>Act: {log.before.actividad.substring(0, 30)}...</div>}
@@ -568,8 +629,12 @@ const ActivityLogPage = () => {
                             </div>
                           ) : '-'}
                         </td>
-                        <td className="px-3 sm:px-4 py-3 text-xs text-gray-600 dark:text-gray-400 max-w-[150px] truncate" title={JSON.stringify(log.after, null, 2)}>
-                          {log.after ? (
+                        <td className="px-3 sm:px-4 py-3 text-xs text-gray-600 dark:text-gray-400 max-w-[150px]" title={JSON.stringify(log.after, null, 2)}>
+                          {log.entity === 'user' ? (
+                            <div className="whitespace-pre-line space-y-0.5">
+                              {formatUserState(log.after, log.action, log.entity)}
+                            </div>
+                          ) : log.after ? (
                             <div className="space-y-0.5">
                               {log.after.seccion && <div>Sección: {log.after.seccion}</div>}
                               {log.after.actividad && <div>Act: {log.after.actividad.substring(0, 30)}...</div>}
