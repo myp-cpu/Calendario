@@ -384,11 +384,34 @@ async def delete_user(
         if email == current_user["email"]:
             raise HTTPException(status_code=400, detail="Cannot delete your own account")
         
+        # Get user data BEFORE deletion for logging
+        user_to_delete = users_collection.find_one({"email": email})
+        if not user_to_delete:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Store before state for logging
+        before_state = {
+            "email": user_to_delete.get("email"),
+            "role": user_to_delete.get("role"),
+            "is_active": user_to_delete.get("is_active", True),
+            "created_at": user_to_delete.get("created_at")
+        }
+        
         # Delete user
         result = users_collection.delete_one({"email": email})
         
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="User not found")
+        
+        # Log the deletion
+        log_activity_action(
+            user_email=current_user["email"],
+            action="delete",
+            entity="user",
+            entity_id=email,
+            before=before_state,
+            after=None
+        )
         
         return {
             "success": True,
@@ -518,10 +541,39 @@ async def update_user_role(
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
+        # Store before state for logging
+        old_role = user.get("role")
+        before_state = {
+            "email": user.get("email"),
+            "role": old_role,
+            "is_active": user.get("is_active", True),
+            "created_at": user.get("created_at")
+        }
+        
         # Update role
         users_collection.update_one(
             {"email": email},
             {"$set": {"role": role, "updated_at": datetime.utcnow().isoformat()}}
+        )
+        
+        # Get updated user state for logging
+        updated_user = users_collection.find_one({"email": email})
+        after_state = {
+            "email": updated_user.get("email"),
+            "role": updated_user.get("role"),
+            "is_active": updated_user.get("is_active", True),
+            "created_at": updated_user.get("created_at"),
+            "updated_at": updated_user.get("updated_at")
+        }
+        
+        # Log the update
+        log_activity_action(
+            user_email=current_user["email"],
+            action="update",
+            entity="user",
+            entity_id=email,
+            before=before_state,
+            after=after_state
         )
         
         return {
