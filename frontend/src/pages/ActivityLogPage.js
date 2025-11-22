@@ -388,7 +388,7 @@ const ActivityLogPage = () => {
       }
       pdf.text(String(afterText).substring(0, 25), xPos + 1, yPosition + 4.5, { maxWidth: colWidths.after - 2 });
 
-      yPosition += rowHeight;
+      yPosition += rowHeight + 6;  // Espacio adicional entre registros para mejor legibilidad
     });
 
     // Footer on all pages
