@@ -379,7 +379,7 @@ const ActivityLogPage = () => {
               <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-2">
                 Gestión de Actividad
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-300 text-left">
+              <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
                 Historial completo de todas las acciones realizadas en el sistema
               </p>
             </div>

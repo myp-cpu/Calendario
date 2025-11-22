@@ -13,10 +13,6 @@ const resolveDefaultBackendUrl = () => {
   
   if (envUrl && envUrl.trim()) {
     const url = normalizeUrl(envUrl.trim());
-    // BACKEND_URL should include /api if the backend is at /api
-    // Example: https://calendario-wdyj.onrender.com/api
-    console.log("[Config] API URL loaded from env:", url);
-    console.log("[Config] BACKEND_URL will be:", url);
     
     // Validate URL format
     if (!url.startsWith("http://") && !url.startsWith("https://")) {
@@ -28,17 +24,12 @@ const resolveDefaultBackendUrl = () => {
   }
 
   console.error("[Config] REACT_APP_API_BASE_URL not set in environment variables");
-  console.log("[Config] Available env vars:", Object.keys(process.env).filter(k => k.startsWith('REACT_APP_')));
   return "";
 };
 
 export const BACKEND_URL = resolveDefaultBackendUrl();
 
-// Debug: Log API URL on module load
-if (BACKEND_URL) {
-  console.log("[Config] ✅ BACKEND_URL configured:", BACKEND_URL);
-  console.log("[Config] ✅ Expected login URL:", `${BACKEND_URL}/auth/login`);
-} else {
+if (!BACKEND_URL) {
   console.error("[Config] ❌ BACKEND_URL is NOT configured");
   console.error("[Config] Please set REACT_APP_API_BASE_URL in Netlify environment variables");
 }

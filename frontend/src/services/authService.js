@@ -59,15 +59,7 @@ export const login = async ({ email }) => {
     throw new Error("La URL del backend no está configurada. Verifica REACT_APP_API_BASE_URL en Netlify.");
   }
 
-  // BACKEND_URL should already include /api from REACT_APP_API_BASE_URL
-  // If REACT_APP_API_BASE_URL = "https://calendario-wdyj.onrender.com/api"
-  // Then BACKEND_URL = "https://calendario-wdyj.onrender.com/api"
-  // And loginUrl = "https://calendario-wdyj.onrender.com/api/auth/login"
   const loginUrl = `${BACKEND_URL}/auth/login`;
-  
-  console.log("[AuthService] BACKEND_URL:", BACKEND_URL);
-  console.log("[AuthService] Attempting login to:", loginUrl);
-  console.log("[AuthService] Email:", email);
 
   try {
     const response = await fetch(loginUrl, {
@@ -78,12 +70,8 @@ export const login = async ({ email }) => {
       body: JSON.stringify({ email }),
     });
 
-    console.log("[AuthService] Login response status:", response.status);
-    console.log("[AuthService] Login response ok:", response.ok);
-    
     // handleResponse will parse the JSON and throw if response.ok is false
     const result = await handleResponse(response);
-    console.log("[AuthService] Login success:", result);
     return result;
   } catch (error) {
     console.error("[AuthService] Login error:", error);
