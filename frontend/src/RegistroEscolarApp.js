@@ -432,25 +432,67 @@ const RegistroEscolarApp = () => {
     });
   };
 
-  // Sort evaluations by time (hora) - same logic as activities
-  // Evaluations without hora go to the end
-  const sortEvaluationsByTime = (evaluations) => {
+  // Sort evaluations by nivel (curso) - custom order: 5, 6, 7, 8, I, II, III, IV
+  const sortEvaluationsByNivel = (evaluations) => {
     if (!evaluations || evaluations.length === 0) return [];
     
+    const nivelOrder = ["5", "6", "7", "8", "I", "II", "III", "IV"];
+    
+    const extractNivel = (evaluation) => {
+      const cursos = evaluation.cursos || [];
+      if (!cursos || cursos.length === 0) return null;
+      
+      const firstCurso = cursos[0];
+      if (!firstCurso) return null;
+      
+      // Extract nivel from curso string (e.g., "5° A" -> "5", "I EM A" -> "I")
+      const cursoStr = String(firstCurso).trim();
+      
+      // Check for Middle levels (5, 6, 7, 8)
+      for (const nivel of ["5", "6", "7", "8"]) {
+        if (cursoStr.startsWith(nivel + "°") || cursoStr.startsWith(nivel + " ")) {
+          return nivel;
+        }
+      }
+      
+      // Check for Senior levels (I, II, III, IV)
+      for (const nivel of ["I", "II", "III", "IV"]) {
+        if (cursoStr.startsWith(nivel + " EM") || cursoStr.startsWith(nivel + " ")) {
+          return nivel;
+        }
+      }
+      
+      return null;
+    };
+    
     return [...evaluations].sort((a, b) => {
-      // Evaluations without hora go to the end
-      if (!a.hora && b.hora) return 1;
-      if (a.hora && !b.hora) return -1;
-      if (!a.hora && !b.hora) return 0;
+      const nivelA = extractNivel(a);
+      const nivelB = extractNivel(b);
       
-      // Sort by time (convert HH:MM to comparable number)
-      const timeA = a.hora ? a.hora.split(':').map(Number) : [99, 99];
-      const timeB = b.hora ? b.hora.split(':').map(Number) : [99, 99];
+      // Unknown niveles go to the end
+      if (!nivelA && !nivelB) return 0;
+      if (!nivelA) return 1;
+      if (!nivelB) return -1;
       
-      const minutesA = timeA[0] * 60 + (timeA[1] || 0);
-      const minutesB = timeB[0] * 60 + (timeB[1] || 0);
+      const indexA = nivelOrder.indexOf(nivelA);
+      const indexB = nivelOrder.indexOf(nivelB);
       
-      return minutesA - minutesB;
+      // If nivel not found in order, put at end
+      if (indexA === -1 && indexB === -1) return 0;
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      
+      // Primary sort: nivel order
+      if (indexA !== indexB) {
+        return indexA - indexB;
+      }
+      
+      // Secondary sort: fecha (if same nivel)
+      if (a.fecha && b.fecha) {
+        return a.fecha.localeCompare(b.fecha);
+      }
+      
+      return 0;
     });
   };
 
@@ -1986,7 +2028,7 @@ const RegistroEscolarApp = () => {
                               .map(activity => renderActivity(activity, dateKey, 'Middle'))}
                           </td>
                           <td className={`border border-gray-300 dark:border-gray-600 p-2 align-top ${middleEval}`}>
-                            {sortEvaluationsByTime(dayEvaluations.Middle || [])
+                            {sortEvaluationsByNivel(dayEvaluations.Middle || [])
                               .filter(evaluation => matchFiltersForEvaluation(evaluation, 'Middle'))
                               .map(evaluation => renderEvaluation(evaluation, dateKey, 'Middle'))}
                           </td>
@@ -1998,7 +2040,7 @@ const RegistroEscolarApp = () => {
                               .map(activity => renderActivity(activity, dateKey, 'Senior'))}
                           </td>
                           <td className={`border border-gray-300 dark:border-gray-600 p-2 align-top ${seniorEval}`}>
-                            {sortEvaluationsByTime(dayEvaluations.Senior || [])
+                            {sortEvaluationsByNivel(dayEvaluations.Senior || [])
                               .filter(evaluation => matchFiltersForEvaluation(evaluation, 'Senior'))
                               .map(evaluation => renderEvaluation(evaluation, dateKey, 'Senior'))}
                           </td>

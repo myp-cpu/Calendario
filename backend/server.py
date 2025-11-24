@@ -1312,6 +1312,58 @@ async def get_evaluations(
         # Fetch evaluations
         evaluations = list(registro_evaluations_collection.find(query).sort("fecha", 1))
         
+        # Custom order for niveles
+        nivel_order = ["5", "6", "7", "8", "I", "II", "III", "IV"]
+        
+        def extract_nivel(evaluation):
+            """Extract nivel from evaluation cursos array"""
+            cursos = evaluation.get("cursos", [])
+            if not cursos:
+                # Fallback to legacy curso field
+                curso = evaluation.get("curso", "")
+                if curso:
+                    cursos = [curso] if isinstance(curso, str) else curso
+            
+            if not cursos:
+                return None
+            
+            # Get first curso to determine nivel
+            first_curso = cursos[0] if isinstance(cursos, list) else cursos
+            if not isinstance(first_curso, str):
+                return None
+            
+            # Extract nivel from curso string (e.g., "5° A" -> "5", "I EM A" -> "I")
+            first_curso = first_curso.strip()
+            
+            # Check for Middle levels (5, 6, 7, 8)
+            for nivel in ["5", "6", "7", "8"]:
+                if first_curso.startswith(nivel + "°") or first_curso.startswith(nivel + " "):
+                    return nivel
+            
+            # Check for Senior levels (I, II, III, IV)
+            for nivel in ["I", "II", "III", "IV"]:
+                if first_curso.startswith(nivel + " EM") or first_curso.startswith(nivel + " "):
+                    return nivel
+            
+            return None
+        
+        def sort_key(evaluation):
+            """Sort key function for evaluations"""
+            nivel = extract_nivel(evaluation)
+            if nivel is None:
+                return (999, evaluation.get("fecha", ""))  # Unknown niveles go to end
+            
+            try:
+                nivel_index = nivel_order.index(nivel)
+            except ValueError:
+                nivel_index = 999  # Unknown nivel
+            
+            # Primary sort: nivel order, Secondary sort: fecha
+            return (nivel_index, evaluation.get("fecha", ""))
+        
+        # Sort evaluations by nivel (and fecha as secondary)
+        evaluations.sort(key=sort_key)
+        
         # Group by date and seccion (frontend format)
         grouped = {}
         for evaluation in evaluations:

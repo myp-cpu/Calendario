@@ -437,8 +437,7 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
 <body>
   <!-- Header with corporate design -->
   <div style="background-color: ${navyBlue}; color: ${white}; padding: 14.65mm 10mm; text-align: center; width: 100%; box-sizing: border-box;">
-    <h1 style="margin: 0; font-size: 20pt; font-weight: bold; color: ${white}; font-family: Arial, Helvetica, sans-serif;">REDLAND SCHOOL</h1>
-    <p style="margin: 3mm 0 0 0; font-size: 12pt; color: ${white}; font-family: Arial, Helvetica, sans-serif;">Registro de Actividades y Evaluaciones</p>
+    <p style="margin: 0; font-size: 12pt; color: ${white}; font-family: Arial, Helvetica, sans-serif;">Registro de Actividades y Evaluaciones</p>
   </div>
   
   <!-- Content area -->
@@ -668,7 +667,7 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
 
     html += `
     <div style="text-align: center; margin-top: 20mm; padding-top: 5mm; border-top: 0.5mm solid ${grayDark}; font-size: 8pt; color: ${grayDark}; font-family: Arial, Helvetica, sans-serif;">
-      Generado el ${dateStr} ${timeStr} | Registro Escolar Web | Redland School
+      Generado el ${dateStr} ${timeStr} | Registro Escolar Web
     </div>
   </div>
 </body>
@@ -720,13 +719,10 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
         // Add header to new page
         pdf.setFillColor(...navyBlue);
         pdf.rect(0, 0, pageWidth, headerHeight, 'F');
-        pdf.setFontSize(20);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setTextColor(...white);
-        pdf.text('REDLAND SCHOOL', pageWidth / 2, headerHeight / 2 - 3, { align: 'center' });
         pdf.setFontSize(12);
         pdf.setFont('helvetica', 'normal');
-        pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2 + 6, { align: 'center' });
+        pdf.setTextColor(...white);
+        pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2, { align: 'center' });
         yPosition = headerHeight + 10;
         return true;
       }
@@ -747,7 +743,7 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
         return new Promise((resolve) => {
           img.onload = () => {
             try {
-              const logoHeight = 22; // ~60px in mm
+              const logoHeight = 14; // Reduced by ~36% (from 22 to 14)
               const logoWidth = (img.width / img.height) * logoHeight;
               
               // Convert image to canvas to get base64
@@ -763,40 +759,28 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
               pdf.addImage(imgData, 'PNG', marginLeft, logoY, logoWidth, logoHeight);
               
               // Text in center of header
-              pdf.setFontSize(20);
-              pdf.setFont('helvetica', 'bold');
-              pdf.setTextColor(...white);
-              pdf.text('REDLAND SCHOOL', pageWidth / 2, headerHeight / 2 - 3, { align: 'center' });
-              
               pdf.setFontSize(12);
               pdf.setFont('helvetica', 'normal');
-              pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2 + 6, { align: 'center' });
+              pdf.setTextColor(...white);
+              pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2, { align: 'center' });
               
               resolve();
             } catch (err) {
               console.error('Error processing logo:', err);
               // Continue without logo
-              pdf.setFontSize(20);
-              pdf.setFont('helvetica', 'bold');
-              pdf.setTextColor(...white);
-              pdf.text('REDLAND SCHOOL', pageWidth / 2, headerHeight / 2 - 3, { align: 'center' });
-              
               pdf.setFontSize(12);
               pdf.setFont('helvetica', 'normal');
-              pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2 + 6, { align: 'center' });
+              pdf.setTextColor(...white);
+              pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2, { align: 'center' });
               resolve();
             }
           };
           img.onerror = () => {
             // Continue without logo
-            pdf.setFontSize(20);
-            pdf.setFont('helvetica', 'bold');
-            pdf.setTextColor(...white);
-            pdf.text('REDLAND SCHOOL', pageWidth / 2, headerHeight / 2 - 3, { align: 'center' });
-            
             pdf.setFontSize(12);
             pdf.setFont('helvetica', 'normal');
-            pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2 + 6, { align: 'center' });
+            pdf.setTextColor(...white);
+            pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2, { align: 'center' });
             resolve();
           };
           img.src = LogoRedland;
@@ -804,14 +788,10 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
       } catch (error) {
         console.error('Error loading logo:', error);
         // Continue without logo
-        pdf.setFontSize(20);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setTextColor(...white);
-        pdf.text('REDLAND SCHOOL', pageWidth / 2, headerHeight / 2 - 3, { align: 'center' });
-        
         pdf.setFontSize(12);
         pdf.setFont('helvetica', 'normal');
-        pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2 + 6, { align: 'center' });
+        pdf.setTextColor(...white);
+        pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2, { align: 'center' });
         return Promise.resolve();
       }
     };
@@ -1295,7 +1275,7 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
     pdf.setFontSize(8);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(...grayDark);
-    pdf.text(`Generado el ${dateStr} ${timeStr} | Registro Escolar Web | Redland School`, 
+    pdf.text(`Generado el ${dateStr} ${timeStr} | Registro Escolar Web`, 
       pageWidth / 2, yPosition, { align: 'center' });
 
     // Save PDF
@@ -1350,13 +1330,10 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
         // Add header to new page
         pdf.setFillColor(...navyBlue);
         pdf.rect(0, 0, pageWidth, headerHeight, 'F');
-        pdf.setFontSize(20);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setTextColor(...white);
-        pdf.text('REDLAND SCHOOL', pageWidth / 2, headerHeight / 2 - 3, { align: 'center' });
         pdf.setFontSize(12);
         pdf.setFont('helvetica', 'normal');
-        pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2 + 6, { align: 'center' });
+        pdf.setTextColor(...white);
+        pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2, { align: 'center' });
         yPosition = headerHeight + 10;
         return true;
       }
@@ -1377,7 +1354,7 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
         return new Promise((resolve) => {
           img.onload = () => {
             try {
-              const logoHeight = 22; // ~60px in mm
+              const logoHeight = 14; // Reduced by ~36% (from 22 to 14)
               const logoWidth = (img.width / img.height) * logoHeight;
               
               // Convert image to canvas to get base64
@@ -1393,36 +1370,27 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
               pdf.addImage(imgData, 'PNG', marginLeft, logoY, logoWidth, logoHeight);
               
               // Text in center of header
-              pdf.setFontSize(20);
-              pdf.setFont('helvetica', 'bold');
-              pdf.setTextColor(...white);
-              pdf.text('REDLAND SCHOOL', pageWidth / 2, headerHeight / 2 - 3, { align: 'center' });
               pdf.setFontSize(12);
               pdf.setFont('helvetica', 'normal');
-              pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2 + 6, { align: 'center' });
+              pdf.setTextColor(...white);
+              pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2, { align: 'center' });
               resolve();
             } catch (err) {
               console.error('Error processing logo:', err);
               // Continue without logo
-              pdf.setFontSize(20);
-              pdf.setFont('helvetica', 'bold');
-              pdf.setTextColor(...white);
-              pdf.text('REDLAND SCHOOL', pageWidth / 2, headerHeight / 2 - 3, { align: 'center' });
               pdf.setFontSize(12);
               pdf.setFont('helvetica', 'normal');
-              pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2 + 6, { align: 'center' });
+              pdf.setTextColor(...white);
+              pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2, { align: 'center' });
               resolve();
             }
           };
           img.onerror = () => {
             // Continue without logo
-            pdf.setFontSize(20);
-            pdf.setFont('helvetica', 'bold');
-            pdf.setTextColor(...white);
-            pdf.text('REDLAND SCHOOL', pageWidth / 2, headerHeight / 2 - 3, { align: 'center' });
             pdf.setFontSize(12);
             pdf.setFont('helvetica', 'normal');
-            pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2 + 6, { align: 'center' });
+            pdf.setTextColor(...white);
+            pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2, { align: 'center' });
             resolve();
           };
           img.src = LogoRedland;
@@ -1430,13 +1398,10 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
       } catch (error) {
         console.error('Error loading logo:', error);
         // Continue without logo
-        pdf.setFontSize(20);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setTextColor(...white);
-        pdf.text('REDLAND SCHOOL', pageWidth / 2, headerHeight / 2 - 3, { align: 'center' });
         pdf.setFontSize(12);
         pdf.setFont('helvetica', 'normal');
-        pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2 + 6, { align: 'center' });
+        pdf.setTextColor(...white);
+        pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2, { align: 'center' });
         return Promise.resolve();
       }
     };
@@ -1901,7 +1866,7 @@ const PrintReportPanel = ({ onClose, activities, evaluations }) => {
     pdf.setFontSize(8);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(...grayDark);
-    pdf.text(`Generado el ${dateStr} ${timeStr} | Registro Escolar Web | Redland School`, 
+    pdf.text(`Generado el ${dateStr} ${timeStr} | Registro Escolar Web`, 
       pageWidth / 2, yPosition, { align: 'center' });
 
     // Return PDF as blob instead of saving

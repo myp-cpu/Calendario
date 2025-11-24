@@ -151,7 +151,7 @@ const ActivityLogPage = () => {
       img.crossOrigin = 'anonymous';
       img.onload = () => {
         try {
-          const logoHeight = 22;
+          const logoHeight = 14; // Reduced by ~36% (from 22 to 14)
           const logoWidth = (img.width / img.height) * logoHeight;
           const canvas = document.createElement('canvas');
           canvas.width = img.width;
@@ -167,13 +167,10 @@ const ActivityLogPage = () => {
       };
       img.src = LogoRedland;
       
-      pdf.setFontSize(20);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setTextColor(...white);
-      pdf.text('REDLAND SCHOOL', pageWidth / 2, headerHeight / 2 - 3, { align: 'center' });
       pdf.setFontSize(12);
       pdf.setFont('helvetica', 'normal');
-      pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2 + 6, { align: 'center' });
+      pdf.setTextColor(...white);
+      pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2, { align: 'center' });
     };
 
     // Add corporate header on first page
@@ -188,7 +185,7 @@ const ActivityLogPage = () => {
       await new Promise((resolve) => {
         img.onload = () => {
           try {
-            const logoHeight = 22;
+            const logoHeight = 14; // Reduced by ~36% (from 22 to 14)
             const logoWidth = (img.width / img.height) * logoHeight;
             const canvas = document.createElement('canvas');
             canvas.width = img.width;
@@ -211,13 +208,10 @@ const ActivityLogPage = () => {
     }
 
     // Title and subtitle in header
-    pdf.setFontSize(20);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(...white);
-    pdf.text('REDLAND SCHOOL', pageWidth / 2, headerHeight / 2 - 3, { align: 'center' });
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'normal');
-    pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2 + 6, { align: 'center' });
+    pdf.setTextColor(...white);
+    pdf.text('Registro de Actividades y Evaluaciones', pageWidth / 2, headerHeight / 2, { align: 'center' });
 
     yPosition = headerHeight + 10;
 
@@ -399,7 +393,7 @@ const ActivityLogPage = () => {
       pdf.setFontSize(8);
       pdf.setTextColor(...grayDark);
       pdf.setFont('helvetica', 'normal');
-      pdf.text(`Generado el ${footerDate} | Registro Escolar Web | Redland School`, pageWidth / 2, pageHeight - 5, { align: 'center' });
+      pdf.text(`Generado el ${footerDate} | Registro Escolar Web`, pageWidth / 2, pageHeight - 5, { align: 'center' });
     }
 
     // Save PDF
