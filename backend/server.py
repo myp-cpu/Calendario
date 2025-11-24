@@ -1059,6 +1059,72 @@ async def get_activities(
         # Fetch activities
         activities = list(registro_activities_collection.find(query).sort("fecha", 1))
         
+        # Custom order for niveles (same as evaluations)
+        nivel_order = ["5", "6", "7", "8", "I", "II", "III", "IV"]
+        
+        def extract_nivel_activity(activity):
+            """Extract nivel from activity cursos array"""
+            cursos = activity.get("cursos", [])
+            if not cursos:
+                # Fallback to legacy curso field
+                curso = activity.get("curso", "")
+                if curso:
+                    cursos = [curso] if isinstance(curso, str) else curso
+            
+            if not cursos:
+                return None
+            
+            # Get first curso to determine nivel
+            first_curso = cursos[0] if isinstance(cursos, list) else cursos
+            if not isinstance(first_curso, str):
+                return None
+            
+            # Extract nivel from curso string (e.g., "5° A" -> "5", "I EM A" -> "I")
+            first_curso = first_curso.strip()
+            
+            # Check for Middle levels (5, 6, 7, 8)
+            for nivel in ["5", "6", "7", "8"]:
+                if first_curso.startswith(nivel + "°") or first_curso.startswith(nivel + " "):
+                    return nivel
+            
+            # Check for Senior levels (I, II, III, IV)
+            for nivel in ["I", "II", "III", "IV"]:
+                if first_curso.startswith(nivel + " EM") or first_curso.startswith(nivel + " "):
+                    return nivel
+            
+            return None
+        
+        def sort_key_activity(activity):
+            """Sort key function for activities"""
+            nivel = extract_nivel_activity(activity)
+            if nivel is None:
+                nivel_index = 999  # Unknown niveles go to end
+            else:
+                try:
+                    nivel_index = nivel_order.index(nivel)
+                except ValueError:
+                    nivel_index = 999  # Unknown nivel
+            
+            # Get fecha for secondary sort
+            fecha = activity.get("fecha", "")
+            
+            # Get hora for tertiary sort (convert to minutes for comparison)
+            hora = activity.get("hora", "")
+            hora_minutes = 9999  # Default for activities without hora or "TODO EL DIA"
+            if hora and hora != "TODO EL DIA":
+                try:
+                    time_parts = hora.split(':')
+                    if len(time_parts) >= 2:
+                        hora_minutes = int(time_parts[0]) * 60 + int(time_parts[1])
+                except (ValueError, IndexError):
+                    pass
+            
+            # Primary sort: nivel order, Secondary sort: fecha, Tertiary sort: hora
+            return (nivel_index, fecha, hora_minutes)
+        
+        # Sort activities by nivel (and fecha/hora as secondary/tertiary)
+        activities.sort(key=sort_key_activity)
+        
         # Group by date and seccion (frontend format)
         grouped = {}
         for activity in activities:

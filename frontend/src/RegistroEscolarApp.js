@@ -407,28 +407,103 @@ const RegistroEscolarApp = () => {
     return `${days[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]}`;
   };
 
-  // Sort activities by time - all-day activities first, then by time (earliest to latest)
-  const sortActivitiesByTime = (activities) => {
+  // Sort activities by nivel (curso) - custom order: 5, 6, 7, 8, I, II, III, IV
+  // Primary: nivel, Secondary: fecha, Tertiary: hora
+  const sortActivitiesByNivel = (activities) => {
     if (!activities || activities.length === 0) return [];
     
-    return [...activities].sort((a, b) => {
-      // All-day activities come first
-      if (a.hora === 'TODO EL DIA' && b.hora !== 'TODO EL DIA') return -1;
-      if (a.hora !== 'TODO EL DIA' && b.hora === 'TODO EL DIA') return 1;
-      
-      // Both are all-day or both have times
-      if (a.hora === 'TODO EL DIA' && b.hora === 'TODO EL DIA') {
-        return 0; // Keep original order for all-day activities
+    const nivelOrder = ["5", "6", "7", "8", "I", "II", "III", "IV"];
+    
+    const extractNivel = (activity) => {
+      const cursos = activity.cursos || [];
+      if (!cursos || cursos.length === 0) {
+        // Fallback to legacy curso field
+        if (activity.curso) {
+          return activity.curso;
+        }
+        return null;
       }
       
-      // Sort by time (convert HH:MM to comparable number)
-      const timeA = a.hora ? a.hora.split(':').map(Number) : [99, 99];
-      const timeB = b.hora ? b.hora.split(':').map(Number) : [99, 99];
+      const firstCurso = cursos[0];
+      if (!firstCurso) return null;
       
-      const minutesA = timeA[0] * 60 + (timeA[1] || 0);
-      const minutesB = timeB[0] * 60 + (timeB[1] || 0);
+      // Extract nivel from curso string (e.g., "5° A" -> "5", "I EM A" -> "I")
+      const cursoStr = String(firstCurso).trim();
       
-      return minutesA - minutesB;
+      // Check for Middle levels (5, 6, 7, 8)
+      for (const nivel of ["5", "6", "7", "8"]) {
+        if (cursoStr.startsWith(nivel + "°") || cursoStr.startsWith(nivel + " ")) {
+          return nivel;
+        }
+      }
+      
+      // Check for Senior levels (I, II, III, IV)
+      for (const nivel of ["I", "II", "III", "IV"]) {
+        if (cursoStr.startsWith(nivel + " EM") || cursoStr.startsWith(nivel + " ")) {
+          return nivel;
+        }
+      }
+      
+      return null;
+    };
+    
+    const getHoraMinutes = (activity) => {
+      const hora = activity.hora;
+      if (!hora || hora === 'TODO EL DIA') {
+        return 9999; // All-day activities go after timed activities
+      }
+      try {
+        const timeParts = hora.split(':').map(Number);
+        if (timeParts.length >= 2) {
+          return timeParts[0] * 60 + (timeParts[1] || 0);
+        }
+      } catch (e) {
+        // Invalid time format
+      }
+      return 9999;
+    };
+    
+    return [...activities].sort((a, b) => {
+      const nivelA = extractNivel(a);
+      const nivelB = extractNivel(b);
+      
+      // Unknown niveles go to the end
+      if (!nivelA && !nivelB) {
+        // Both unknown, sort by fecha then hora
+        if (a.fecha !== b.fecha) {
+          return (a.fecha || '').localeCompare(b.fecha || '');
+        }
+        return getHoraMinutes(a) - getHoraMinutes(b);
+      }
+      if (!nivelA) return 1;
+      if (!nivelB) return -1;
+      
+      const indexA = nivelOrder.indexOf(nivelA);
+      const indexB = nivelOrder.indexOf(nivelB);
+      
+      // If nivel not found in order, put at end
+      if (indexA === -1 && indexB === -1) {
+        // Both unknown, sort by fecha then hora
+        if (a.fecha !== b.fecha) {
+          return (a.fecha || '').localeCompare(b.fecha || '');
+        }
+        return getHoraMinutes(a) - getHoraMinutes(b);
+      }
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      
+      // Primary sort: nivel order
+      if (indexA !== indexB) {
+        return indexA - indexB;
+      }
+      
+      // Secondary sort: fecha (if same nivel)
+      if (a.fecha && b.fecha && a.fecha !== b.fecha) {
+        return a.fecha.localeCompare(b.fecha);
+      }
+      
+      // Tertiary sort: hora (if same nivel and fecha)
+      return getHoraMinutes(a) - getHoraMinutes(b);
     });
   };
 
@@ -2016,14 +2091,14 @@ const RegistroEscolarApp = () => {
                           
                           {/* Junior Activities */}
                           <td className={`border border-gray-300 dark:border-gray-600 p-2 align-top ${juniorBase}`}>
-                            {sortActivitiesByTime(dayActivities.Junior || [])
+                            {sortActivitiesByNivel(dayActivities.Junior || [])
                               .filter(activity => matchFiltersForActivity(activity, 'Junior'))
                               .map(activity => renderActivity(activity, dateKey, 'Junior'))}
                           </td>
                           
                           {/* Middle Activities & Evaluations */}
                           <td className={`border border-gray-300 dark:border-gray-600 p-2 align-top ${middleBase}`}>
-                            {sortActivitiesByTime(dayActivities.Middle || [])
+                            {sortActivitiesByNivel(dayActivities.Middle || [])
                               .filter(activity => matchFiltersForActivity(activity, 'Middle'))
                               .map(activity => renderActivity(activity, dateKey, 'Middle'))}
                           </td>
@@ -2035,7 +2110,7 @@ const RegistroEscolarApp = () => {
                           
                           {/* Senior Activities & Evaluations */}
                           <td className={`border border-gray-300 dark:border-gray-600 p-2 align-top ${seniorBase}`}>
-                            {sortActivitiesByTime(dayActivities.Senior || [])
+                            {sortActivitiesByNivel(dayActivities.Senior || [])
                               .filter(activity => matchFiltersForActivity(activity, 'Senior'))
                               .map(activity => renderActivity(activity, dateKey, 'Senior'))}
                           </td>
