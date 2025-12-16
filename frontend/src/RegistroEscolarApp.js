@@ -280,14 +280,65 @@ const RegistroEscolarApp = () => {
   
   // Helper function to check if a date is Sunday
   // In JavaScript: getDay() returns 0 (Sunday) to 6 (Saturday)
+  // Uses local date parsing to avoid timezone issues
   const isSunday = (dateString) => {
     if (!dateString) return false;
     try {
+      // Parse date as local date (YYYY-MM-DD format)
+      // Adding 'T12:00:00' ensures we use local noon to avoid timezone shifts
+      // This ensures the date is interpreted correctly regardless of browser timezone
       const date = new Date(dateString + 'T12:00:00');
+      // Verify the date was parsed correctly
+      if (isNaN(date.getTime())) {
+        return false;
+      }
       return date.getDay() === 0; // 0 = Sunday in JavaScript
     } catch {
       return false;
     }
+  };
+
+  // Helper function to validate date range (fecha_inicio to fecha_fin) does not contain any Sunday
+  const validateDateRangeNoSunday = (fechaInicio, fechaFin) => {
+    if (!fechaInicio) return { isValid: true, errorMessage: null };
+    
+    // Validate fecha_inicio
+    if (isSunday(fechaInicio)) {
+      return { isValid: false, errorMessage: '❌ No se permiten actividades en Domingo. Por favor seleccione otro día.' };
+    }
+    
+    // If fecha_fin is provided, validate the entire range
+    if (fechaFin) {
+      if (isSunday(fechaFin)) {
+        return { isValid: false, errorMessage: '❌ No se permiten actividades en Domingo. Por favor seleccione otra fecha de término.' };
+      }
+      
+      // Parse both dates
+      const startDate = new Date(fechaInicio + 'T12:00:00');
+      const endDate = new Date(fechaFin + 'T12:00:00');
+      
+      // Validate that endDate is after or equal to startDate
+      if (endDate < startDate) {
+        return { isValid: false, errorMessage: '❌ La fecha de término debe ser posterior o igual a la fecha de inicio.' };
+      }
+      
+      // Check each date in the range for Sunday
+      const currentDate = new Date(startDate);
+      while (currentDate <= endDate) {
+        if (currentDate.getDay() === 0) { // Sunday
+          // Format the Sunday date for the error message
+          const year = currentDate.getFullYear();
+          const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+          const day = String(currentDate.getDate()).padStart(2, '0');
+          const sundayStr = `${year}-${month}-${day}`;
+          return { isValid: false, errorMessage: `❌ No se permiten actividades en Domingo. El rango de fechas incluye el domingo ${sundayStr}.` };
+        }
+        // Move to next day
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+    }
+    
+    return { isValid: true, errorMessage: null };
   };
   
   // Helper function to disable Sundays in date input
@@ -652,21 +703,22 @@ const RegistroEscolarApp = () => {
       return;
     }
 
-    // Validar que la fecha no sea domingo
-    if (activityForm.fecha && isSunday(activityForm.fecha)) {
-      alert('❌ No se permiten actividades en Domingo. Por favor seleccione otro día.');
-      return;
-    }
-    
-    // Validar fecha fin si existe
-    if (activityForm.fechaFin && isSunday(activityForm.fechaFin)) {
-      alert('❌ No se permiten actividades en Domingo. Por favor seleccione otra fecha de término.');
+    // Validar rango completo de fechas (valida todo el rango desde fecha hasta fechaFin)
+    const dateValidation = validateDateRangeNoSunday(activityForm.fecha, activityForm.fechaFin);
+    if (!dateValidation.isValid) {
+      alert(dateValidation.errorMessage);
       return;
     }
 
     try {
-      const startDate = new Date(activityForm.fecha);
-      const endDate = activityForm.fechaFin ? new Date(activityForm.fechaFin) : startDate;
+      // Normalize dates to YYYY-MM-DD format to avoid timezone issues
+      // Always use local noon (T12:00:00) to ensure consistent date parsing
+      const startDateStr = activityForm.fecha; // Already in YYYY-MM-DD format from input
+      const endDateStr = activityForm.fechaFin || null; // Already in YYYY-MM-DD format from input
+      
+      // Parse dates using local noon to avoid timezone shifts
+      const startDate = new Date(startDateStr + 'T12:00:00');
+      const endDate = endDateStr ? new Date(endDateStr + 'T12:00:00') : startDate;
 
       // Determine cursos array based on seccion and cursoSeleccionado
       let cursosArray = null;
@@ -688,12 +740,13 @@ const RegistroEscolarApp = () => {
         let createdCount = 0;
         let totalCreated = 0;
         while (currentDate <= endDate) {
+          // Use getDateKey to ensure YYYY-MM-DD format (avoids timezone issues)
           const dateKey = getDateKey(currentDate);
           const activityData = {
             seccion: activityForm.seccion,
             actividad: activityForm.actividad,
-            fecha: dateKey,
-            fechaFin: activityForm.fechaFin,
+            fecha: dateKey, // Normalized to YYYY-MM-DD
+            fechaFin: endDateStr, // Use original string, not parsed date
             hora: activityForm.hora,
             lugar: activityForm.lugar || null,
             responsable: activityForm.responsable || null,
@@ -715,11 +768,15 @@ const RegistroEscolarApp = () => {
           : `✅ Actividades agregadas exitosamente: ${totalCreated} actividades creadas para ${createdCount} días`);
       } else {
         // Single day activity
+        // Normalize fecha to ensure YYYY-MM-DD format (should already be in this format)
+        const normalizedFecha = activityForm.fecha; // Already YYYY-MM-DD from date input
+        const normalizedFechaFin = activityForm.fechaFin || null; // Already YYYY-MM-DD from date input
+        
         const activityData = {
           seccion: activityForm.seccion,
           actividad: activityForm.actividad,
-          fecha: activityForm.fecha,
-          fechaFin: activityForm.fechaFin || null,
+          fecha: normalizedFecha, // YYYY-MM-DD format
+          fechaFin: normalizedFechaFin, // YYYY-MM-DD format or null
           hora: activityForm.hora,
           lugar: activityForm.lugar || null,
           responsable: activityForm.responsable || null,
@@ -871,15 +928,10 @@ const RegistroEscolarApp = () => {
       return;
     }
 
-    // Validar que la fecha no sea domingo
-    if (activityForm.fecha && isSunday(activityForm.fecha)) {
-      alert('❌ No se permiten actividades en Domingo. Por favor seleccione otro día.');
-      return;
-    }
-    
-    // Validar fecha fin si existe
-    if (activityForm.fechaFin && isSunday(activityForm.fechaFin)) {
-      alert('❌ No se permiten actividades en Domingo. Por favor seleccione otra fecha de término.');
+    // Validar rango completo de fechas (valida todo el rango desde fecha hasta fechaFin)
+    const dateValidation = validateDateRangeNoSunday(activityForm.fecha, activityForm.fechaFin);
+    if (!dateValidation.isValid) {
+      alert(dateValidation.errorMessage);
       return;
     }
 

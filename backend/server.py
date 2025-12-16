@@ -112,16 +112,116 @@ async def get_current_admin_user(current_user: dict = Depends(get_current_user))
         raise HTTPException(status_code=403, detail="Not enough permissions. Editor role required.")
     return current_user
 
+def normalize_date_string(date_string: str) -> str:
+    """
+    Normalize date string to YYYY-MM-DD format
+    Handles various input formats and ensures consistent output
+    """
+    if not date_string:
+        return date_string
+    
+    # Remove any whitespace
+    date_string = date_string.strip()
+    
+    # If already in YYYY-MM-DD format, return as is
+    if len(date_string) == 10 and date_string[4] == '-' and date_string[7] == '-':
+        try:
+            # Validate it's a valid date
+            datetime.strptime(date_string, "%Y-%m-%d")
+            return date_string
+        except ValueError:
+            pass
+    
+    # Try to parse common formats
+    formats_to_try = [
+        "%Y-%m-%d",           # YYYY-MM-DD (standard)
+        "%Y/%m/%d",           # YYYY/MM/DD
+        "%d-%m-%Y",           # DD-MM-YYYY
+        "%d/%m/%Y",           # DD/MM/YYYY
+        "%m-%d-%Y",           # MM-DD-YYYY
+        "%m/%d/%Y",           # MM/DD/YYYY
+    ]
+    
+    for fmt in formats_to_try:
+        try:
+            date_obj = datetime.strptime(date_string, fmt)
+            # Return in YYYY-MM-DD format
+            return date_obj.strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+    
+    # If no format matches, return original (will cause error in caller)
+    return date_string
+
 def is_sunday(date_string: str) -> bool:
     """
     Check if a date string (YYYY-MM-DD) is a Sunday
     Returns True if the date is Sunday (weekday 6), False otherwise
+    Uses local date parsing to avoid timezone issues
     """
     try:
-        date_obj = datetime.strptime(date_string, "%Y-%m-%d")
+        # Normalize date string first
+        normalized_date = normalize_date_string(date_string)
+        
+        # Parse date as local date (no time component, no timezone)
+        # This ensures the date is interpreted correctly regardless of server timezone
+        date_obj = datetime.strptime(normalized_date, "%Y-%m-%d")
+        # weekday() returns 0=Monday, 6=Sunday
         return date_obj.weekday() == 6  # 6 = Sunday
-    except:
+    except (ValueError, TypeError):
         return False
+
+def validate_date_range_no_sunday(fecha_inicio: str, fecha_fin: str | None = None) -> tuple[bool, str | None]:
+    """
+    Validate that a date range (fecha_inicio to fecha_fin) does not contain any Sunday
+    If fecha_fin is None, only validates fecha_inicio
+    
+    Returns: (is_valid, error_message)
+    - is_valid: True if no Sunday found, False otherwise
+    - error_message: Error message if invalid, None if valid
+    """
+    try:
+        # Validate fecha_inicio
+        if not fecha_inicio:
+            return (True, None)
+        
+        # Normalize date strings to YYYY-MM-DD format
+        normalized_fecha_inicio = normalize_date_string(fecha_inicio)
+        
+        if is_sunday(normalized_fecha_inicio):
+            return (False, "No se permiten actividades en Domingo")
+        
+        # If fecha_fin is provided, validate the entire range
+        if fecha_fin:
+            normalized_fecha_fin = normalize_date_string(fecha_fin)
+            
+            if is_sunday(normalized_fecha_fin):
+                return (False, "No se permiten actividades en Domingo (fecha de término)")
+            
+            # Parse both dates (already normalized to YYYY-MM-DD)
+            try:
+                start_date = datetime.strptime(normalized_fecha_inicio, "%Y-%m-%d")
+                end_date = datetime.strptime(normalized_fecha_fin, "%Y-%m-%d")
+            except ValueError as e:
+                return (False, f"Formato de fecha inválido: {str(e)}")
+            
+            # Validate that end_date is after or equal to start_date
+            if end_date < start_date:
+                return (False, "La fecha de término debe ser posterior o igual a la fecha de inicio")
+            
+            # Check each date in the range for Sunday
+            current_date = start_date
+            while current_date <= end_date:
+                if current_date.weekday() == 6:  # Sunday
+                    # Format the Sunday date for the error message
+                    sunday_str = current_date.strftime("%Y-%m-%d")
+                    return (False, f"No se permiten actividades en Domingo. El rango de fechas incluye el domingo {sunday_str}")
+                # Move to next day
+                current_date += timedelta(days=1)
+        
+        return (True, None)
+    except (ValueError, TypeError) as e:
+        return (False, f"Error al validar fechas: {str(e)}")
 
 def log_activity_action(
     user_email: str,
@@ -946,19 +1046,21 @@ async def create_activity(
         if activity.seccion not in ["Junior", "Middle", "Senior", "ALL"]:
             raise HTTPException(status_code=400, detail="Invalid seccion. Must be Junior, Middle, Senior, or ALL")
         
-        # Validate that fecha is not Sunday
-        if activity.fecha and is_sunday(activity.fecha):
-            raise HTTPException(status_code=400, detail="No se permiten actividades en Domingo")
+        # Normalize date strings to YYYY-MM-DD format before validation
+        normalized_fecha = normalize_date_string(activity.fecha)
+        normalized_fechaFin = normalize_date_string(activity.fechaFin) if activity.fechaFin else None
         
-        # Validate fechaFin if provided
-        if activity.fechaFin and is_sunday(activity.fechaFin):
-            raise HTTPException(status_code=400, detail="No se permiten actividades en Domingo (fecha de término)")
+        # Validate date range (validates entire range from fecha to fechaFin)
+        is_valid, error_message = validate_date_range_no_sunday(normalized_fecha, normalized_fechaFin)
+        if not is_valid:
+            raise HTTPException(status_code=400, detail=error_message)
         
         # Base activity data (common to all activities)
+        # Store normalized dates to ensure consistency
         base_activity_data = {
             "actividad": activity.actividad,
-            "fecha": activity.fecha,
-            "fechaFin": activity.fechaFin,
+            "fecha": normalized_fecha,  # Use normalized date
+            "fechaFin": normalized_fechaFin,  # Use normalized date
             "hora": activity.hora,
             "lugar": activity.lugar,
             "responsable": activity.responsable,
@@ -1170,23 +1272,25 @@ async def update_activity(
         if not existing:
             raise HTTPException(status_code=404, detail="Activity not found")
         
-        # Validate that fecha is not Sunday
-        if activity.fecha and is_sunday(activity.fecha):
-            raise HTTPException(status_code=400, detail="No se permiten actividades en Domingo")
+        # Normalize date strings to YYYY-MM-DD format before validation
+        normalized_fecha = normalize_date_string(activity.fecha)
+        normalized_fechaFin = normalize_date_string(activity.fechaFin) if activity.fechaFin else None
         
-        # Validate fechaFin if provided
-        if activity.fechaFin and is_sunday(activity.fechaFin):
-            raise HTTPException(status_code=400, detail="No se permiten actividades en Domingo (fecha de término)")
+        # Validate date range (validates entire range from fecha to fechaFin)
+        is_valid, error_message = validate_date_range_no_sunday(normalized_fecha, normalized_fechaFin)
+        if not is_valid:
+            raise HTTPException(status_code=400, detail=error_message)
         
         # Store before state for logging
         before_state = serialize_activity(existing)
         
         # Update activity
+        # Use normalized dates to ensure consistency
         update_data = {
             "seccion": activity.seccion,
             "actividad": activity.actividad,
-            "fecha": activity.fecha,
-            "fechaFin": activity.fechaFin,
+            "fecha": normalized_fecha,  # Use normalized date
+            "fechaFin": normalized_fechaFin,  # Use normalized date
             "hora": activity.hora,
             "lugar": activity.lugar,
             "responsable": activity.responsable,
