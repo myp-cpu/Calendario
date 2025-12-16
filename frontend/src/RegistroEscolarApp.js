@@ -711,8 +711,14 @@ const RegistroEscolarApp = () => {
     }
 
     try {
-      const startDate = new Date(activityForm.fecha);
-      const endDate = activityForm.fechaFin ? new Date(activityForm.fechaFin) : startDate;
+      // Normalize dates to YYYY-MM-DD format to avoid timezone issues
+      // Always use local noon (T12:00:00) to ensure consistent date parsing
+      const startDateStr = activityForm.fecha; // Already in YYYY-MM-DD format from input
+      const endDateStr = activityForm.fechaFin || null; // Already in YYYY-MM-DD format from input
+      
+      // Parse dates using local noon to avoid timezone shifts
+      const startDate = new Date(startDateStr + 'T12:00:00');
+      const endDate = endDateStr ? new Date(endDateStr + 'T12:00:00') : startDate;
 
       // Determine cursos array based on seccion and cursoSeleccionado
       let cursosArray = null;
@@ -734,12 +740,13 @@ const RegistroEscolarApp = () => {
         let createdCount = 0;
         let totalCreated = 0;
         while (currentDate <= endDate) {
+          // Use getDateKey to ensure YYYY-MM-DD format (avoids timezone issues)
           const dateKey = getDateKey(currentDate);
           const activityData = {
             seccion: activityForm.seccion,
             actividad: activityForm.actividad,
-            fecha: dateKey,
-            fechaFin: activityForm.fechaFin,
+            fecha: dateKey, // Normalized to YYYY-MM-DD
+            fechaFin: endDateStr, // Use original string, not parsed date
             hora: activityForm.hora,
             lugar: activityForm.lugar || null,
             responsable: activityForm.responsable || null,
@@ -761,11 +768,15 @@ const RegistroEscolarApp = () => {
           : `✅ Actividades agregadas exitosamente: ${totalCreated} actividades creadas para ${createdCount} días`);
       } else {
         // Single day activity
+        // Normalize fecha to ensure YYYY-MM-DD format (should already be in this format)
+        const normalizedFecha = activityForm.fecha; // Already YYYY-MM-DD from date input
+        const normalizedFechaFin = activityForm.fechaFin || null; // Already YYYY-MM-DD from date input
+        
         const activityData = {
           seccion: activityForm.seccion,
           actividad: activityForm.actividad,
-          fecha: activityForm.fecha,
-          fechaFin: activityForm.fechaFin || null,
+          fecha: normalizedFecha, // YYYY-MM-DD format
+          fechaFin: normalizedFechaFin, // YYYY-MM-DD format or null
           hora: activityForm.hora,
           lugar: activityForm.lugar || null,
           responsable: activityForm.responsable || null,
