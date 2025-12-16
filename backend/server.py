@@ -116,12 +116,60 @@ def is_sunday(date_string: str) -> bool:
     """
     Check if a date string (YYYY-MM-DD) is a Sunday
     Returns True if the date is Sunday (weekday 6), False otherwise
+    Uses local date parsing to avoid timezone issues
     """
     try:
+        # Parse date as local date (no time component, no timezone)
+        # This ensures the date is interpreted correctly regardless of server timezone
         date_obj = datetime.strptime(date_string, "%Y-%m-%d")
+        # weekday() returns 0=Monday, 6=Sunday
         return date_obj.weekday() == 6  # 6 = Sunday
-    except:
+    except (ValueError, TypeError):
         return False
+
+def validate_date_range_no_sunday(fecha_inicio: str, fecha_fin: str | None = None) -> tuple[bool, str | None]:
+    """
+    Validate that a date range (fecha_inicio to fecha_fin) does not contain any Sunday
+    If fecha_fin is None, only validates fecha_inicio
+    
+    Returns: (is_valid, error_message)
+    - is_valid: True if no Sunday found, False otherwise
+    - error_message: Error message if invalid, None if valid
+    """
+    try:
+        # Validate fecha_inicio
+        if not fecha_inicio:
+            return (True, None)
+        
+        if is_sunday(fecha_inicio):
+            return (False, "No se permiten actividades en Domingo")
+        
+        # If fecha_fin is provided, validate the entire range
+        if fecha_fin:
+            if is_sunday(fecha_fin):
+                return (False, "No se permiten actividades en Domingo (fecha de término)")
+            
+            # Parse both dates
+            start_date = datetime.strptime(fecha_inicio, "%Y-%m-%d")
+            end_date = datetime.strptime(fecha_fin, "%Y-%m-%d")
+            
+            # Validate that end_date is after or equal to start_date
+            if end_date < start_date:
+                return (False, "La fecha de término debe ser posterior o igual a la fecha de inicio")
+            
+            # Check each date in the range for Sunday
+            current_date = start_date
+            while current_date <= end_date:
+                if current_date.weekday() == 6:  # Sunday
+                    # Format the Sunday date for the error message
+                    sunday_str = current_date.strftime("%Y-%m-%d")
+                    return (False, f"No se permiten actividades en Domingo. El rango de fechas incluye el domingo {sunday_str}")
+                # Move to next day
+                current_date += timedelta(days=1)
+        
+        return (True, None)
+    except (ValueError, TypeError) as e:
+        return (False, f"Error al validar fechas: {str(e)}")
 
 def log_activity_action(
     user_email: str,
@@ -946,13 +994,10 @@ async def create_activity(
         if activity.seccion not in ["Junior", "Middle", "Senior", "ALL"]:
             raise HTTPException(status_code=400, detail="Invalid seccion. Must be Junior, Middle, Senior, or ALL")
         
-        # Validate that fecha is not Sunday
-        if activity.fecha and is_sunday(activity.fecha):
-            raise HTTPException(status_code=400, detail="No se permiten actividades en Domingo")
-        
-        # Validate fechaFin if provided
-        if activity.fechaFin and is_sunday(activity.fechaFin):
-            raise HTTPException(status_code=400, detail="No se permiten actividades en Domingo (fecha de término)")
+        # Validate date range (validates entire range from fecha to fechaFin)
+        is_valid, error_message = validate_date_range_no_sunday(activity.fecha, activity.fechaFin)
+        if not is_valid:
+            raise HTTPException(status_code=400, detail=error_message)
         
         # Base activity data (common to all activities)
         base_activity_data = {
@@ -1170,13 +1215,10 @@ async def update_activity(
         if not existing:
             raise HTTPException(status_code=404, detail="Activity not found")
         
-        # Validate that fecha is not Sunday
-        if activity.fecha and is_sunday(activity.fecha):
-            raise HTTPException(status_code=400, detail="No se permiten actividades en Domingo")
-        
-        # Validate fechaFin if provided
-        if activity.fechaFin and is_sunday(activity.fechaFin):
-            raise HTTPException(status_code=400, detail="No se permiten actividades en Domingo (fecha de término)")
+        # Validate date range (validates entire range from fecha to fechaFin)
+        is_valid, error_message = validate_date_range_no_sunday(activity.fecha, activity.fechaFin)
+        if not is_valid:
+            raise HTTPException(status_code=400, detail=error_message)
         
         # Store before state for logging
         before_state = serialize_activity(existing)
